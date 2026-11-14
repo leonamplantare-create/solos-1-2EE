@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ensaios de Resistência</title>
+<meta name="description" content="Prática de envoltórias de resistência: ensaios triaxiais UU, CU, CD e cisalhamento direto, com treino corrigido e gerador de exercícios.">
+<script>try{var t=localStorage.getItem("solos2ee.theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="assets/exemplos-ensaios.js"></script>
+<script defer src="assets/ensaios.js"></script>
+<script defer src="assets/nav.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+  <a class="brand" href="index.html">Mecânica dos Solos 2 <span class="tag">2ª EE</span></a>
+  <span class="spacer"></span>
+  <a class="icon-btn" href="recalque.html" style="text-decoration:none">Recalque</a>
+  <button class="icon-btn" id="themeBtn" aria-label="Alternar tema claro/escuro">◐</button>
+</header>
+
+<div class="layout">
+<nav class="sidenav" id="sidenav" aria-label="Seções">
+  <div class="group">Ensaios (UU, CU, CD)</div>
+  <ol>
+    <li><a href="#exercicios">Exercícios</a></li>
+    <li><a href="#treino">Modo treino</a></li>
+    <li><a href="#mohr">Círculo de Mohr</a></li>
+    <li><a href="#calculadora">Calculadora rápida</a></li>
+    <li><a href="#resumo">Resumo dos ensaios</a></li>
+  </ol>
+  <div class="group">Outros assuntos</div>
+  <ol>
+    <li><a href="recalque.html">Recalque (adensamento)</a></li>
+  </ol>
+</nav>
+
+<main>
+  <section class="block" id="exercicios">
+    <h2>Ensaios de resistência — prática</h2>
+    <p class="lead">Treine o 1º quesito da prova (<strong>identificar</strong> o ensaio pela envoltória e <strong>desenhar</strong> a envoltória a partir dos parâmetros) e o 2º quesito (<strong>círculo de Mohr</strong>).</p>
+    <div class="btnrow">
+      <button type="button" class="btn primary" id="ensRndId">Gerar exercício: identificar</button>
+      <button type="button" class="btn primary" id="ensRndDes">Gerar exercício: desenhar</button>
+      <button type="button" class="btn primary" id="ensRndMohr">Gerar exercício: círculo de Mohr</button>
+    </div>
+    <p class="hint">Em cada exercício pronto, <strong>Outros valores</strong> repete o mesmo tipo com coesão, ângulo e círculos novos.</p>
+    <h3>Exercícios da aula e da prova</h3>
+    <div class="ex-list" id="ensLista"></div>
+  </section>
+
+  <section class="block" id="treino">
+    <h2>Modo treino</h2>
+    <div id="ensTreinoBox"></div>
+  </section>
+
+  <section class="block" id="calculadora">
+    <h2>Calculadora rápida</h2>
+    <p>Monte uma envoltória e veja o gráfico, os círculos de Mohr e a tabela de respostas. Depois, se quiser, treine com ela.</p>
+    <div class="calc-layout">
+      <form id="ensForm" autocomplete="off" onsubmit="return false">
+        <fieldset>
+          <legend>Dados</legend>
+          <div class="fields">
+            <label class="f wide">Tipo de ensaio
+              <select name="tipo">
+                <option value="UU">Triaxial UU — não adensado, não drenado</option>
+                <option value="CU" selected>Triaxial CU — adensado, não drenado</option>
+                <option value="CD">Triaxial CD — adensado, drenado</option>
+                <option value="DIRETO">Cisalhamento direto</option>
+              </select>
+            </label>
+            <label class="f">c (ou Cu) — kPa<input type="text" inputmode="decimal" name="c" value="1"></label>
+            <label class="f">φ informado como
+              <select name="phiModo"><option value="tg">tgφ (ex.: arctg 0,25 → 0,25)</option><option value="graus">graus</option></select>
+            </label>
+            <label class="f">φ<input type="text" inputmode="decimal" name="phi" value="0,25"></label>
+            <label class="f wide"><span id="ensListaLbl">σ3 dos círculos (separe com ;)</span><input type="text" name="lista" placeholder="deixe vazio para escolher automaticamente"></label>
+          </div>
+        </fieldset>
+        <div class="btnrow">
+          <button type="button" class="btn" id="ensTreinarCalc">Treinar: identificar este gráfico</button>
+          <button type="button" class="btn" id="ensTreinarCalcD">Treinar: desenhar esta envoltória</button>
+        </div>
+      </form>
+      <div class="result-panel">
+        <div class="card">
+          <div class="figure"><svg id="ensCalcSvg" role="img" aria-label="Gráfico τ × σ da envoltória"></svg></div>
+          <div id="ensCalcOut"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="resumo">
+    <h2>Resumo dos ensaios (como respondido em sala)</h2>
+    <div class="table-wrap"><table>
+      <tr><th></th><th>Triaxial UU</th><th>Triaxial CU</th><th>Triaxial CD</th><th>Cisalhamento direto</th></tr>
+      <tr><th>Nome</th><td>Não adensado, não drenado</td><td>Adensado, não drenado</td><td>Adensado, drenado</td><td>—</td></tr>
+      <tr><th>Parâmetros medidos</th><td>C (Cu)</td><td>C e φ</td><td>c' e φ'</td><td>τ, δH e δV (deslocamentos)</td></tr>
+      <tr><th>Nível de tensão na ruptura</th><td>Total</td><td>Total</td><td>Efetiva</td><td>Indefinida (não tem controle de drenagem)</td></tr>
+      <tr><th>Equação da envoltória</th><td>τ = Cu (φ = 0)</td><td>τ = c + σ·tgφ</td><td>τ = c' + σ'·tgφ'</td><td>τ = c + σ·tgφ (se c = 0: τ = σ·tgφ)</td></tr>
+      <tr><th>Como reconhecer no gráfico</th><td>Círculos iguais, envoltória horizontal</td><td>Círculos, envoltória inclinada, eixo σ</td><td>Círculos, envoltória inclinada, eixo σ'</td><td>Pontos (x), não círculos</td></tr>
+    </table></div>
+    <h3>Para tirar c e φ do gráfico</h3>
+    <div class="formula">\[ c = \tau \text{ no } \sigma = 0 \qquad \text{tg}\,\varphi = \frac{\tau_2 - \tau_1}{\sigma_2 - \sigma_1} = \frac{\tau - c}{\sigma} \qquad \varphi = \text{arctg}(\text{tg}\,\varphi) \]</div>
+    <p>Exemplo da aula (CU): c = 3 e o ponto (3; 4) → 4 = 3 + 3·tgφ → tgφ = 1/3 → φ = arctg(1/3) = 18,43°.</p>
+    <h3>Para desenhar a envoltória</h3>
+    <p>Calcule dois pontos e ligue: em σ = 0, τ = c; em σ = 10, τ = c + 10·tgφ. No UU é uma reta horizontal em τ = Cu, e os círculos têm todos o mesmo raio (= Cu).</p>
+    <p class="src">Fontes: resolução de sala e 2º Exercício Escolar (UPE 2024.2); livro Carlos de Sousa Pinto, Aula 12.</p>
+  </section>
+</main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

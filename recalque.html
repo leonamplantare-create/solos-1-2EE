@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recalque dos Solos</title>
+<meta name="description" content="Prática de recalque: exemplos resolvidos passo a passo e calculadora para criar e compartilhar novos exemplos.">
+<script>try{var t=localStorage.getItem("solos2ee.theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<link rel="stylesheet" href="assets/style.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script defer src="assets/exemplos-recalque.js"></script>
+<script defer src="assets/quiz-recalque.js"></script>
+<script defer src="assets/recalque.js"></script>
+<script defer src="assets/treino.js"></script>
+<script defer src="assets/nav.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+  <a class="brand" href="index.html">Mecânica dos Solos 2 <span class="tag">2ª EE</span></a>
+  <span class="spacer"></span>
+  <a class="icon-btn" href="#calculadora" style="text-decoration:none">Calculadora</a>
+  <button class="icon-btn" id="themeBtn" aria-label="Alternar tema claro/escuro">◐</button>
+</header>
+
+<div class="layout">
+<nav class="sidenav" id="sidenav" aria-label="Seções">
+  <div class="group">Praticar</div>
+  <ol>
+    <li><a href="#exemplos">Exemplos prontos</a></li>
+    <li><a href="#treino">Modo treino</a></li>
+    <li><a href="#calculadora">Calculadora rápida</a></li>
+    <li><a href="#ferramentas">Ferramentas rápidas</a></li>
+    <li><a href="#formulario">Resumo de fórmulas</a></li>
+    <li><a href="#duvidas">Dúvidas frequentes</a></li>
+    <li><a href="#quiz">Teste rápido</a></li>
+  </ol>
+  <div class="group">Outros assuntos</div>
+  <ol>
+    <li><a href="ensaios.html">Ensaios (UU, CU, CD)</a></li>
+    <li><a href="ensaios.html#mohr">Círculo de Mohr</a></li>
+  </ol>
+</nav>
+
+<main>
+  <section class="block" id="exemplos">
+    <h2>Recalque — prática</h2>
+    <p class="lead"><strong>Modo treino:</strong> você resolve, digita seus resultados e o site corrige, aponta o erro e explica como um professor. <strong>Calculadora rápida:</strong> mostra a resolução completa na hora. Qualquer exercício pode ser compartilhado por link.</p>
+    <h3>Exemplos prontos</h3>
+    <p>Exemplos de adensamento (Teoria de Terzaghi) vistos em sala.</p>
+    <div class="ex-list" id="presetList"></div>
+    <h3>Meus exemplos</h3>
+    <p class="muted" id="mineEmpty">Você ainda não salvou nenhum. Monte um exemplo na calculadora e clique em <strong>Salvar nos meus exemplos</strong>. Eles ficam guardados só neste navegador — para mandar para alguém, use <strong>Copiar link</strong>.</p>
+    <div class="ex-list" id="mineList"></div>
+  </section>
+
+  <section class="block" id="treino">
+    <h2>Modo treino</h2>
+    <p>Escolha o exercício, resolva no papel e confira aqui. As respostas só aparecem quando você pedir.</p>
+    <div class="fields" style="max-width:520px"><label class="f">Exercício<select id="treinoPick"></select></label></div>
+    <p class="hint">Para treinar um exercício que você mesmo montou: preencha a calculadora rápida abaixo e clique em <strong>Treinar com este exemplo</strong>.</p>
+    <div id="treinoBox"></div>
+  </section>
+
+  <section class="block" id="calculadora">
+    <h2>Calculadora rápida</h2>
+    <div id="sharedBanner"></div>
+    <p>Preencha o problema — o resultado é recalculado na hora, com cada fórmula e explicação. Use vírgula ou ponto nos decimais.</p>
+    <div class="calc-layout">
+      <form id="calcForm" autocomplete="off" onsubmit="return false">
+        <fieldset>
+          <legend>Identificação</legend>
+          <div class="fields">
+            <label class="f wide">Título do exemplo<input type="text" name="titulo" placeholder="Ex.: Sapata 3×3 m sobre argila orgânica"></label>
+            <label class="f wide">Enunciado / descrição<textarea name="descricao" placeholder="Escreva o enunciado para quem for receber o link"></textarea></label>
+            <label class="f wide">Sistema de unidades
+              <select name="unidades"><option value="tf">tf, tf/m², kgf/cm² (professor)</option><option value="kN">kN, kPa, MPa (livro)</option></select>
+            </label>
+          </div>
+          <div id="exNota"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Fundação e carga</legend>
+          <div class="fields">
+            <label class="f">Forma
+              <select name="forma"><option value="quadrada">Quadrada</option><option value="retangular">Retangular</option><option value="circular">Circular</option><option value="nenhuma">Sem sapata (aterro extenso)</option></select>
+            </label>
+            <label class="f only-fund">B — largura ou diâmetro (m)<input type="text" inputmode="decimal" name="B"></label>
+            <label class="f only-L">L — comprimento (m)<input type="text" inputmode="decimal" name="L"></label>
+            <label class="f only-fund"><span>P — carga no pilar (<span data-unit="P">tf</span>)</span><input type="text" inputmode="decimal" name="P"></label>
+            <label class="f">Df — cota da base da sapata (m)<input type="text" inputmode="decimal" name="Df"></label>
+            <label class="check only-fund" style="grid-column:1/-1"><input type="checkbox" name="acresc10"> Somar 10% de peso próprio à carga P</label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Recalque imediato (camada de areia)</legend>
+          <div class="fields">
+            <label class="f wide">Método
+              <select name="metodo"><option value="sapata">Sapata — B·p·(1−μ²)·I / E</option><option value="pontual">Carga pontual — 3P / (2πEz)</option><option value="nenhum">Não calcular</option></select>
+            </label>
+            <label class="f only-imed"><span>E — módulo de elasticidade (<span data-unit="E">kgf/cm²</span>)</span><input type="text" inputmode="decimal" name="E"></label>
+            <label class="f only-sapata">μ — Poisson<input type="text" inputmode="decimal" name="mu"></label>
+            <label class="f only-pontual">z — espessura da camada (m)<input type="text" inputmode="decimal" name="z"></label>
+            <label class="f only-sapata">Fator I
+              <select name="Imodo"><option value="tabela">Pela tabela</option><option value="manual">Informar valor</option></select>
+            </label>
+            <label class="f only-Itab">Rigidez
+              <select name="rigidez"><option value="flexivel">Flexível</option><option value="rigido">Rígida</option></select>
+            </label>
+            <label class="f only-Itab only-ponto">Ponto
+              <select name="ponto"><option value="centro">Centro</option><option value="canto">Canto / borda</option></select>
+            </label>
+            <label class="f only-Iman">I (valor)<input type="text" inputmode="decimal" name="I"></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Perfil do subsolo</legend>
+          <p class="hint" style="margin-top:0">De cima para baixo. Digite o γ como está no enunciado (<span data-unit="g">tf/m³</span>) e, na coluna <strong>Água</strong>, escolha: <strong>Sem água</strong> (o γ é usado como está) ou <strong>Com água</strong> (a calculadora desconta o γw: γ − γw, e desenha a água). Se o enunciado já der o γsub pronto, marque <strong>Sem água</strong> e digite o γsub. Pode marcar água em várias camadas, coladas ou separadas. Se o NA cortar uma camada, divida-a em duas. Marque qual camada é a argila compressível.</p>
+          <div class="table-wrap"><table class="layers-table">
+            <thead><tr><th title="Camada de argila compressível (onde se calcula o adensamento)">Argila?</th><th>Nome</th><th>Tipo</th><th>h (m)</th><th>γ (<span data-unit="g">tf/m³</span>)</th><th>Água</th><th></th></tr></thead>
+            <tbody id="layersBody"></tbody>
+          </table></div>
+          <div class="btnrow"><button type="button" class="btn small" id="addLayer">+ Adicionar camada</button></div>
+          <div class="fields"><label class="f"><span>γw — peso específico da água (<span data-unit="g">tf/m³</span>)</span><input type="text" inputmode="decimal" name="gw" placeholder="padrão: 10 kN/m³ ou 1 tf/m³"></label></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><label class="check" style="display:inline-flex"><input type="checkbox" name="argAtivo"> Recalque por adensamento (argila)</label></legend>
+          <div class="fields only-arg">
+            <label class="f">e₀ — índice de vazios inicial<input type="text" inputmode="decimal" name="e0"></label>
+            <label class="f">Índice de compressão Cc
+              <select name="ccModo"><option value="na">0,009 (LL − 10) — normalmente adensada</option><option value="amolgada">0,007 (LL − 10) — amolgada</option><option value="recife">0,013 (LL − 33) — orgânica do Recife</option><option value="dado">Informar Cc</option></select>
+            </label>
+            <label class="f only-ccLL">LL (%)<input type="text" inputmode="decimal" name="LL"></label>
+            <label class="f only-ccdado">Cc<input type="text" inputmode="decimal" name="Cc"></label>
+            <label class="f">Histórico de tensões
+              <select name="historico"><option value="NA">Normalmente adensada</option><option value="OA">Sobreadensada</option></select>
+            </label>
+            <label class="f only-OA">Como informar σ'a
+              <select name="oaModo"><option value="sa">σ'a (valor)</option><option value="rsa">RSA = σ'a / σ'0</option><option value="acr">σ'a = σ'0 + acréscimo</option></select>
+            </label>
+            <label class="f only-OA"><span><span id="saLabel">σ'a</span> <span class="only-sa-unit">(<span data-unit="p">tf/m²</span>)</span></span><input type="text" inputmode="decimal" name="sa"></label>
+            <label class="f only-OA">Cr — índice de recompressão<input type="text" inputmode="decimal" name="Cr"></label>
+            <label class="f">Δp no meio da argila
+              <select name="dpModo"><option value="dado">Informar valor</option><option value="aterro">Aterro: γat × Hat</option><option value="21">Estimar pelo método 2:1</option></select>
+            </label>
+            <label class="f only-dpdado"><span>Δp (<span data-unit="p">tf/m²</span>)</span><input type="text" inputmode="decimal" name="dp"></label>
+            <label class="f only-dpaterro"><span>γat do aterro (<span data-unit="g">tf/m³</span>)</span><input type="text" inputmode="decimal" name="gat"></label>
+            <label class="f only-dpaterro"><span>Hat — altura do aterro (m)</span><input type="text" inputmode="decimal" name="hat"></label>
+            <label class="f">Nº de subcamadas<input type="text" inputmode="numeric" name="nsub" value="1"></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend><label class="check" style="display:inline-flex"><input type="checkbox" name="tempoAtivo"> Tempo de recalque</label></legend>
+          <div class="fields only-tempo">
+            <label class="f">Cv<input type="text" inputmode="decimal" name="Cv" placeholder="ex.: 1e-3"></label>
+            <label class="f">Unidade do Cv
+              <select name="cvUnidade"><option value="cm2s">cm²/s</option><option value="m2dia">m²/dia</option><option value="m2ano">m²/ano</option></select>
+            </label>
+            <label class="f">Faces drenantes
+              <select name="faces"><option value="2">2 (drena para cima e para baixo)</option><option value="1">1 (só para um lado)</option></select>
+            </label>
+            <label class="f wide">Tempo para U% = (separe com ;)<input type="text" name="Ulist" placeholder="ex.: 100; 65; 90"></label>
+            <label class="f wide">Tempo para recalque parcial ΔHp(t) em cm = (separe com ;)<input type="text" name="dHlist" placeholder="ex.: 4"></label>
+            <label class="f wide">Recalque após t dias = (separe com ;)<input type="text" name="diasList" placeholder="ex.: 100; 365"></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend><label class="check" style="display:inline-flex"><input type="checkbox" name="secAtivo"> Compressão secundária</label></legend>
+          <div class="fields only-sec">
+            <label class="f">Cα<input type="text" inputmode="decimal" name="Ca"></label>
+            <label class="f">t₂ / t₁<input type="text" inputmode="decimal" name="t2t1" placeholder="ex.: 10"></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend><label class="check" style="display:inline-flex"><input type="checkbox" name="difAtivo"> Recalque diferencial</label></legend>
+          <div class="fields only-dif">
+            <label class="f">ΔHt do pilar vizinho (cm)<input type="text" inputmode="decimal" name="dHviz"></label>
+            <label class="f">L — distância entre eixos (m)<input type="text" inputmode="decimal" name="Ldif"></label>
+          </div>
+        </fieldset>
+
+        <div class="btnrow">
+          <button type="button" class="btn primary" id="btnLink">Copiar link para compartilhar</button>
+          <button type="button" class="btn" id="btnSalvar">Salvar nos meus exemplos</button>
+          <button type="button" class="btn" id="btnJson">Baixar .json</button>
+          <label class="btn" style="display:inline-block">Importar .json<input type="file" id="fileJson" accept=".json,application/json" hidden></label>
+          <button type="button" class="btn" id="btnTreinar">Treinar com este exemplo</button>
+          <button type="button" class="btn danger" id="btnNovo">Limpar</button>
+        </div>
+        <div id="shareBox" class="hidden">
+          <label class="f">Link do exemplo (quem abrir verá o exemplo carregado)<input type="text" id="shareOut" readonly onclick="this.select()"></label>
+        </div>
+      </form>
+
+      <div class="result-panel">
+        <div class="card">
+          <h3 style="margin-top:0">Resultado</h3>
+          <div class="summary" id="summary"></div>
+          <div class="figure"><svg id="profileSvg" class="profile-svg" viewBox="0 0 520 400" role="img" aria-label="Perfil do subsolo"></svg></div>
+          <div class="figure" id="curveWrap"><svg id="curveSvg" viewBox="0 0 420 230" role="img" aria-label="Curva de porcentagem de recalque em função do fator tempo"></svg><figcaption>Curva U × Tv (Terzaghi) com os pontos calculados.</figcaption></div>
+          <div class="warns" id="warns"></div>
+          <div id="steps"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="ferramentas">
+    <h2>Ferramentas rápidas</h2>
+    <div class="grid2">
+      <div class="card">
+        <h4>U% → Tv</h4>
+        <label class="f">U (%)<input type="text" inputmode="decimal" id="toolU" value="65"></label>
+        <p id="toolUout"></p>
+      </div>
+      <div class="card">
+        <h4>Tv → U%</h4>
+        <label class="f">Tv<input type="text" inputmode="decimal" id="toolTv" value="0,29"></label>
+        <p id="toolTvout"></p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h4>Tabela Tv × U (solução exata de Terzaghi)</h4>
+      <div class="table-wrap"><table id="tvTable"></table></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h4>Coeficiente de adensamento Cv = k(1+e) / (av·γw)</h4>
+      <div class="fields">
+        <label class="f">k (cm/s)<input type="text" inputmode="decimal" id="cvK" value="3e-6"></label>
+        <label class="f">e<input type="text" inputmode="decimal" id="cvE" value="3"></label>
+        <label class="f">av (m²/kN ou m²/tf)<input type="text" inputmode="decimal" id="cvAv" value="0,06"></label>
+        <label class="f">γw (10 kN/m³ ou 1 tf/m³)<input type="text" inputmode="decimal" id="cvGw" value="10"></label>
+      </div>
+      <div id="cvOut" style="overflow-x:auto"></div>
+      <p class="hint">Valores iniciais = livro, Exercício 10.1 (resposta: 2 × 10⁻³ cm²/s).</p>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h4>Recalque por escoamento lateral</h4>
+      <div class="fields">
+        <label class="f">Forma<select id="elTipo"><option value="quadrada">Quadrada (lado a)</option><option value="circular">Circular (diâmetro d)</option><option value="continua">Contínua (largura b)</option></select></label>
+        <label class="f">C (cm⁴/kg)<select id="elC"><option value="50">50 — areia fofa</option><option value="6">6 — areia compacta</option><option value="1">1 — areia argilosa compacta</option></select></label>
+        <label class="f">Δσ0 (kgf/cm²)<input type="text" inputmode="decimal" id="elS" value="2"></label>
+        <label class="f">a, d ou b (cm)<input type="text" inputmode="decimal" id="elA" value="200"></label>
+      </div>
+      <div id="elOut"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h4>Conversor de pressões</h4>
+      <div class="fields">
+        <label class="f">Valor<input type="text" inputmode="decimal" id="cvtV" value="1"></label>
+        <label class="f">Unidade<select id="cvtFrom"><option value="kgfcm2">kgf/cm²</option><option value="tfm2">tf/m²</option><option value="kPa">kPa (kN/m²)</option><option value="MPa">MPa</option></select></label>
+      </div>
+      <div id="cvtOut" class="table-wrap"></div>
+    </div>
+  </section>
+
+  <section class="block" id="formulario">
+    <h2>Resumo de fórmulas (cola para revisar)</h2>
+    <div class="table-wrap"><table>
+      <tr><th>O quê</th><th>Fórmula</th></tr>
+      <tr><td>Recalque imediato (sapata)</td><td>\( \Delta H_i = \dfrac{B\,p\,(1-\mu^2)\,I}{E} \)</td></tr>
+      <tr><td>Recalque imediato (carga pontual)</td><td>\( \Delta H_i = \dfrac{3P}{2\pi E z} \)</td></tr>
+      <tr><td>Escoamento lateral</td><td>\( \Delta h_e = C\Delta\sigma_0/a \) (quadr.), \( /d \) (circ.), \( /2b \) (contínua)</td></tr>
+      <tr><td>Índice de compressão</td><td>\( C_c = 0{,}009(LL-10\%) \)</td></tr>
+      <tr><td>Tensão efetiva inicial</td><td>\( \sigma'_0 = \sum\gamma_i h_i \) até o meio da argila</td></tr>
+      <tr><td>Tensão final</td><td>\( \sigma'_f = \sigma'_0 + \Delta p \)</td></tr>
+      <tr><td>Δe — normalmente adensada</td><td>\( \Delta e = C_c\log(\sigma'_f/\sigma'_0) \)</td></tr>
+      <tr><td>Δe — sobreadensada, σ'f ≤ σ'a</td><td>\( \Delta e = C_r\log(\sigma'_f/\sigma'_0) \)</td></tr>
+      <tr><td>Δe — sobreadensada, σ'f &gt; σ'a</td><td>\( \Delta e = C_r\log(\sigma'_a/\sigma'_0) + C_c\log(\sigma'_f/\sigma'_a) \)</td></tr>
+      <tr><td>Recalque por adensamento</td><td>\( \Delta H_p = \dfrac{\Delta e}{1+e_0}H_0 \)</td></tr>
+      <tr><td>RSA</td><td>\( RSA = \sigma'_a/\sigma'_0 \)</td></tr>
+      <tr><td>av, mv, D</td><td>\( a_v = \Delta e/\Delta p \quad m_v = a_v/(1+e_0) \quad D = 1/m_v \)</td></tr>
+      <tr><td>Coef. de adensamento</td><td>\( C_v = \dfrac{k(1+e_0)}{a_v\gamma_w} \)</td></tr>
+      <tr><td>Fator tempo</td><td>\( U\le60\%: T_v = \frac{\pi}{4}U^2 \quad U&gt;60\%: T_v = 1{,}781-0{,}933\log(100-U\%) \quad U=100\%: T_v=2 \)</td></tr>
+      <tr><td>Tempo</td><td>\( t = T_v h^2 / C_v \), \( h = H_0/\text{nº faces} \)</td></tr>
+      <tr><td>Recalque parcial</td><td>\( \Delta H_p(t) = U\cdot\Delta H_p \)</td></tr>
+      <tr><td>Cv pelo ensaio</td><td>\( C_v = 0{,}197H_{dr}^2/t_{50} \) ou \( 0{,}0385H_{dr}^2/t_{22,14} \)</td></tr>
+      <tr><td>Secundário</td><td>\( \Delta H_s = \dfrac{C_\alpha}{1+e_p}H_0\log(t_2/t_1) \)</td></tr>
+      <tr><td>Diferencial e distorção</td><td>\( \Delta H_d = \Delta H_{t1}-\Delta H_{t2} \qquad D_\alpha = \Delta H_d/L \)</td></tr>
+      <tr><td>Total</td><td>\( \Delta H_t = \Delta H_i + \Delta H_p\ (+\Delta H_s) \)</td></tr>
+    </table></div>
+  </section>
+
+  <section class="block" id="duvidas">
+    <h2>Dúvidas frequentes</h2>
+    <details class="why"><summary>Por que σ'0 é calculado no MEIO da camada de argila?</summary>Porque a tensão efetiva cresce com a profundidade e o recalque de cada pedacinho da camada é diferente. O ponto médio representa bem a média — o livro mostra que dividir em 3 subcamadas dá 0,56 m contra 0,54 m pelo ponto médio. Na calculadora você pode testar mudando o "Nº de subcamadas".</details>
+    <details class="why"><summary>Quando uso γ natural e quando uso γ submerso?</summary>Acima do NA use γ natural (γh ou γn). Abaixo do NA use γsub = γsat − γw. Usando γsub você já obtém a tensão EFETIVA direto, sem precisar calcular a pressão neutra separada.</details>
+    <details class="why"><summary>Por que o ΔHi usa os dados da areia e o ΔHp os da argila?</summary>A areia é muito permeável e deforma na hora (recalque imediato, elástico). A argila saturada só deforma quando a água sai (adensamento, lento). Por isso "toda areia é imediata" e "o tempo de recalque se refere à argila".</details>
+    <details class="why"><summary>B é o lado maior ou menor da sapata?</summary>O menor (largura). O L é o comprimento. A relação m1 = L/B ≥ 1 entra na tabela de I.</details>
+    <details class="why"><summary>Por que converter tf/m² em kgf/cm² (dividir por 10)?</summary>Para ficar coerente com E em kgf/cm². 1 tf = 1.000 kgf e 1 m² = 10.000 cm², então 1 tf/m² = 1.000/10.000 = 0,1 kgf/cm². E aí B entra em cm para o recalque sair em cm.</details>
+    <details class="why"><summary>O log é natural (ln) ou decimal?</summary>Decimal (log₁₀) — é o da tecla "log" da calculadora. O índice Cc é definido no gráfico e × log₁₀ σ'.</details>
+    <details class="why"><summary>No ΔHp uso H0 inteiro ou a metade?</summary>H0 inteiro (espessura total da camada de argila). A metade só aparece no cálculo de σ'0 e na altura de drenagem com duas faces.</details>
+    <details class="why"><summary>Como sei se a camada é drenante?</summary>Se ela é bem mais permeável que a argila (k ≥ 100 k da argila) — areias e pedregulhos. Rocha sã ou argila rija são impermeáveis. A superfície do terreno sempre drena.</details>
+    <details class="why"><summary>Para tempo de um recalque parcial, uso ΔHt ou ΔHp?</summary>ΔHp. O ΔHi já aconteceu no fim da obra; só o adensamento evolui com o tempo. U = ΔHp(t) / ΔHp.</details>
+    <details class="why"><summary>Por que Tv = 2 para U = 100%?</summary>Matematicamente U = 100% só em tempo infinito. É uma convenção da lista para o "fim do adensamento" (com Tv = 2, U ≈ 99,4%). Alguns livros usam Tv ≈ 1,0 a 1,5 (U ≈ 93–98%). Siga o que o professor usa na prova.</details>
+    <details class="why"><summary>Uma face drenante muda o recalque total?</summary>Não. Só a velocidade: h dobra, t ∝ h², então cada etapa demora 4× mais.</details>
+    <details class="why"><summary>Na distorção angular, L é o vão livre entre as sapatas?</summary>Não, é a distância entre os eixos (centros) dos pilares. No exercício 3: 1 m (meia sapata) + 3 m (vão) + 1 m (meia sapata) = 5 m.</details>
+    <details class="why"><summary>Como compartilhar um exemplo que eu criei?</summary>Clique em "Copiar link para compartilhar" — o exemplo inteiro vai dentro do link. Quem abrir verá a calculadora já preenchida com a resolução. Para deixá-lo fixo no site para todo mundo, baixe o .json e adicione-o no arquivo <code>assets/exemplos-recalque.js</code> do repositório.</details>
+  </section>
+
+  <section class="block" id="quiz">
+    <h2>Teste rápido</h2>
+    <p>Clique numa alternativa para ver a resposta e a explicação. <span class="pill" id="quizScore">0 respondidas</span></p>
+    <div id="quizBox"></div>
+  </section>
+
+  <p class="src">Material de estudo baseado nos slides e na lista de exercícios do prof. Antônio Carlos (monitor Gabriel Carvalho da Silva) e no livro <em>Curso Básico de Mecânica dos Solos</em>, de Carlos de Sousa Pinto (Aulas 9, 10 e 11). Confira sempre com o material oficial da disciplina.</p>
+</main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
