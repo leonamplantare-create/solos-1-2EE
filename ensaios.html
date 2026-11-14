@@ -12,6 +12,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script defer src="assets/exemplos-ensaios.js"></script>
 <script defer src="assets/ensaios.js"></script>
+<script defer src="assets/mohr.js"></script>
 <script defer src="assets/nav.js"></script>
 </head>
 <body>
@@ -56,6 +57,24 @@
   <section class="block" id="treino">
     <h2>Modo treino</h2>
     <div id="ensTreinoBox"></div>
+  </section>
+
+  <section class="block" id="mohr">
+    <h2>Círculo de Mohr — laboratório</h2>
+    <p>Três jeitos de estudar: <strong>Explicar</strong> (passo a passo animado), <strong>Explorar</strong> (mude σ3, σ1 e α e veja tudo mudar) e <strong>Marcar pontos</strong> (você clica no círculo onde fica cada ponto e o site corrige).</p>
+    <div class="mz-tabs" role="tablist">
+      <button type="button" data-m="explicar" class="on">Explicar passo a passo</button>
+      <button type="button" data-m="explorar">Explorar (valores dinâmicos)</button>
+      <button type="button" data-m="marcar">Marcar pontos A–E</button>
+    </div>
+    <div class="mz-grid">
+      <div class="card"><svg id="mzSvg" class="mz" role="img" aria-label="Círculo de Mohr interativo"></svg></div>
+      <div id="mzSide"></div>
+    </div>
+    <div class="btnrow" style="margin-top:16px">
+      <button type="button" class="btn" id="mzTreinoValores">Treinar a questão de prova (valores)</button>
+      <button type="button" class="btn" id="mzTreinoLetras">Treinar a questão de prova (letras A–E)</button>
+    </div>
   </section>
 
   <section class="block" id="calculadora">
