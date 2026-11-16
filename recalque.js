@@ -500,7 +500,7 @@
             ])],
             eq: `\\Delta H_p = \\dfrac{\\Delta e}{1+e_0}\\, H_0 = \\dfrac{${T(r.de, 4)}}{1+${Tg(e0)}} \\times ${Tg(H * 100)}\\ \\text{cm} = ${T(dHp)}\\ \\text{cm}`,
             res: `ΔHp = ${fmt(dHp)} cm`,
-            why: "Δe/(1+e0) é a deformação específica da camada (vem do esquema sólidos + vazios: H = Hs(1+e)). Multiplicando pela espessura TOTAL da argila H0 (em cm) temos o recalque em cm. Cuidado: H0 é a espessura inteira, não a metade!"
+            why: "Δe/(1+e0) é a deformação específica da camada (vem do esquema sólidos + vazios: H = Hs(1+e)). Ela não tem unidade, então o ΔHp sai na mesma unidade do H0: com H0 em metros (ex.: 10 m) o resultado sai em metros; multiplique por 100 para ter cm (ou já use H0 = 1000 cm). Cuidado: H0 é a espessura inteira da argila, não a metade!"
           });
         } else if (rows.length) {
           const head = `<tr><th>Sub.</th><th class="num">z (m)</th><th class="num">σ'0</th><th class="num">Δp</th><th class="num">σ'f</th>${ar.historico === "OA" ? '<th class="num">σ\'a</th>' : ""}<th class="num">Δe</th><th class="num">ΔH (cm)</th></tr>`;
@@ -606,7 +606,7 @@
           const anos = CU.toDays === 365;
           add(g, {
             t: origem,
-            f: "U \\le 60\\%: T_v = \\dfrac{\\pi}{4}\\left(\\dfrac{U}{100}\\right)^2 \\quad U > 60\\%: T_v = 1{,}781 - 0{,}933\\log(100-U) \\quad U = 100\\%: T_v = 2 \\\\[6pt] t = \\dfrac{T_v\\, h^2}{C_v}",
+            f: (U >= 100 ? "U = 100\\% \\Rightarrow T_v = 2" : U <= 60 ? `U = ${Tg(U, 2)}\\% \\le 60\\% \\Rightarrow T_v = \\dfrac{\\pi}{4}\\left(\\dfrac{U}{100}\\right)^2` : `U = ${Tg(U, 2)}\\% > 60\\% \\Rightarrow T_v = 1{,}781 - 0{,}933\\log(100-U)`) + " \\\\[6pt] t = \\dfrac{T_v\\, h^2}{C_v}",
             ans: [
               Q("Tv", "", Tv, 0.03, [
                 U > 60 && U < 100 ? { v: Math.PI / 4 * Math.pow(U / 100, 2), m: "Para U > 60% a fórmula é Tv = 1,781 − 0,933·log(100 − U)." } : null,
@@ -622,7 +622,7 @@
             res: tempoRes(d),
             why: U >= 100
               ? "Teoricamente, 100% de adensamento só ocorre em tempo infinito. Na prática (e na lista do professor) adota-se Tv = 2,0 para 'fim do adensamento' — a série exata dá U ≈ 99,4% com Tv = 2."
-              : `Pela tabela exata de Terzaghi (livro, Tab. 10.1), U = ${fmtg(U, 1)}% corresponde a Tv = ${fmtg(TvExato(U), 4)}. As fórmulas aproximadas dão praticamente o mesmo valor.`
+              : `Escolha a fórmula pelo U: até 60% usa Tv = (π/4)·(U/100)²; acima de 60% usa Tv = 1,781 − 0,933·log(100 − U); em 100% usa Tv = 2. Aqui U = ${fmtg(U, 1)}%, ${U <= 60 ? "que é até 60%, então vale a primeira" : "que passa de 60%, então vale a segunda"}. (A tabela exata do livro dá Tv = ${fmtg(TvExato(U), 4)}, praticamente igual.)`
           });
           temposU.push({ U, d });
         };

@@ -47,7 +47,9 @@
     s += ponto("A", st.s1, 0, "A (σ1)", -10, -12, cor.ac);
     s += ponto("D", g.c, g.r, "D (τmáx)", 8, -8, cor.ac);
     s += `<g data-k="C"><text x="${X(st.s3)}" y="${Y(0) - 28}" font-size="12" font-weight="700" text-anchor="middle" fill="${cor.bad}">C = B? (σ2 = σ3)</text></g>`;
-    s += `<g data-k="E"><line id="mzEline" x1="${X(g.c)}" y1="${Y(0)}" x2="${X(g.sE)}" y2="${Y(g.tE)}" stroke="${cor.ac}" stroke-width="2" stroke-dasharray="5 4"/>
+    s += `<g data-k="E"><line id="mzEpolo" x1="${X(st.s3)}" y1="${Y(0)}" x2="${X(g.sE)}" y2="${Y(g.tE)}" stroke="${cor.wat}" stroke-width="1.6" stroke-dasharray="2 4"/>
+      <text id="mzEpoloTxt" x="${X(st.s3) + 34}" y="${Y(0) - 6}" font-size="11" fill="${cor.wat}">α = ${st.alpha}°</text>
+      <line id="mzEline" x1="${X(g.c)}" y1="${Y(0)}" x2="${X(g.sE)}" y2="${Y(g.tE)}" stroke="${cor.ac}" stroke-width="2" stroke-dasharray="5 4"/>
       <path id="mzEarc" d="" fill="none" stroke="${cor.ac}" stroke-width="1.5"/>
       <text id="mzEang" x="${X(g.c) + 20}" y="${Y(0) - 6}" font-size="12" fill="${cor.ac}">2α = ${2 * st.alpha}°</text>
       <circle id="mzEpt" class="mz-pt" cx="${X(g.sE)}" cy="${Y(g.tE)}" r="6" fill="${cor.ac}"/>
@@ -63,6 +65,8 @@
     const sx = g.c + g.r * Math.cos(a), ty = g.r * Math.sin(a);
     const set = (id, attrs) => { const el = document.getElementById(id); if (el) Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v)); };
     set("mzEline", { x2: X(sx), y2: Y(ty) });
+    set("mzEpolo", { x2: X(sx), y2: Y(ty) });
+    const pt = document.getElementById("mzEpoloTxt"); if (pt) pt.textContent = `α = ${Math.round(ang2 / 2)}°`;
     set("mzEpt", { cx: X(sx), cy: Y(ty) });
     set("mzElab", { x: X(sx) + 8, y: Y(ty) - 8 });
     const rr = Math.min(28, g.r * K * 0.45);
@@ -131,7 +135,8 @@
     $("#mzSide").innerHTML = `
       <p><b>Indique no círculo</b> cada ponto: escolha a letra e clique no círculo. α = <b>${st.alpha}°</b>. Se algum não for possível, use o botão de "não é possível".</p>
       <div class="mz-letras">${["A", "B", "C", "D", "E"].map(l => `<button type="button" class="btn small" data-l="${l}"><b>${l}</b> — ${NOMES[l]}${l === "E" ? ` (α = ${st.alpha}°)` : ""}</button>`).join("")}</div>
-      <div class="btnrow"><button type="button" class="btn small" id="mzNao">Letra selecionada: não é possível</button></div>
+      <div class="btnrow"><button type="button" class="btn small" id="mzNao">✕ A letra selecionada não é possível de indicar</button></div>
+      <p class="hint">Dica para o E: do ponto do σ3, trace uma reta inclinada α; onde ela cortar o círculo é o E. (Ou gire 2α a partir do σ1, pelo centro.)</p>
       <div class="btnrow">
         <button type="button" class="btn primary" id="mzCorr">Corrigir</button>
         <button type="button" class="btn" id="mzResp">Mostrar resposta</button>
@@ -139,7 +144,7 @@
       </div>
       <div id="mzFb"></div>`;
     $$("[data-l]").forEach(b => b.onclick = () => { letra = b.dataset.l; destacar(); });
-    $("#mzNao").onclick = () => { marcas[letra] = "nao"; desenharMarcas(); destacar(); };
+    $("#mzNao").onclick = () => { marcas[letra] = "nao"; $("#mzFb").innerHTML = ""; desenharMarcas(); destacar(); };
     $("#mzCorr").onclick = corrigir;
     $("#mzResp").onclick = () => { mostrarSo(["eixos", "circ", "centro", "raio", "A", "B", "D", "E", "C"]); animarE(900); $("#mzFb").innerHTML = `<div class="callout tip"><strong>Resposta</strong>A = σ1 (direita, τ = 0) · B = σ3 (esquerda, τ = 0) · C: não é possível — no triaxial σ2 = σ3, então coincide com B · D = topo do círculo (τmáx) · E = gire 2α = ${2 * st.alpha}° a partir de A.</div>`; };
     $("#mzNovo").onclick = () => { novoCirculo(); painelMarcar(); };
@@ -166,6 +171,7 @@
     const s = (p.x - L) / K, t = TMAX - (p.y - T) / K;
     marcas[letra] = noCirculo(s, t);
     corrigido = false;
+    $("#mzFb").innerHTML = "";
     desenharMarcas();
     const prox = ["A", "B", "C", "D", "E"].find(l => !marcas[l]);
     if (prox) letra = prox;
@@ -204,7 +210,7 @@
         const a = angDe(m);
         if (Math.abs(a - st.alpha) < 6) dica = `Você girou só α = ${st.alpha}°. No círculo de Mohr o ângulo é DOBRADO: gire 2α = ${2 * st.alpha}° a partir de A.`;
         else if (Math.abs(a - (180 - 2 * st.alpha)) < 6) dica = "Você contou o ângulo a partir do σ3. O ângulo α é medido a partir do plano principal MAIOR (ponto A, à direita).";
-        else dica = `Parta de A (direita) e gire 2α = ${2 * st.alpha}° em torno do centro, no sentido anti-horário.`;
+        else dica = `Parta de A (direita) e gire 2α = ${2 * st.alpha}° em torno do centro (σ = c + r·cos2α; τ = r·sen2α). Truque sem conta: do ponto B (σ3), trace uma reta inclinada α = ${st.alpha}° — onde ela corta o círculo é o E.`;
       }
       msgs.push(`<b>${l}</b>: ${dica}`);
     });
@@ -227,7 +233,7 @@
       { k: ["eixos", "B", "A", "circ", "centro", "raio", "D"], t: "τmáx — ponto D", x: `O ponto mais alto do círculo é a <b>tensão de cisalhamento máxima</b>: τmáx = raio = <b>${f(g.r)} kPa</b>, com σ = ${f(g.c)}. Esse plano faz 45° com o plano principal maior.` },
       { k: ["eixos", "B", "A", "circ", "centro", "D", "desv"], t: "Tensão desviadora", x: `Δσ = σ1 − σ3 = <b>${f(g.d)} kPa</b>: é o acréscimo de tensão axial aplicado no ensaio, igual ao <b>diâmetro</b> do círculo (o dobro de τmáx).` },
       { k: ["eixos", "B", "A", "circ", "D", "C"], t: "E o intermediário (C)?", x: `No triaxial a pressão confinante age igual nas duas direções laterais: <b>σ2 = σ3 = ${f(st.s3)}</b>. O ponto do intermediário coincidiria com B, por isso <b>não é possível</b> indicá-lo separado.` },
-      { k: ["eixos", "B", "A", "circ", "centro", "D", "E"], t: "Plano a um ângulo α — ponto E", x: `Para um plano que faz α = ${st.alpha}° com o plano principal maior, parta de A e gire <b>2α = ${2 * st.alpha}°</b> em torno do centro. E = (σ; τ) = (<b>${f(g.sE)}</b>; <b>${f(g.tE)}</b>).`, anim: "E" },
+      { k: ["eixos", "B", "A", "circ", "centro", "D", "E"], t: "Plano a um ângulo α — ponto E", x: `Para um plano que faz α = ${st.alpha}° com o plano principal maior, parta de A e gire <b>2α = ${2 * st.alpha}°</b> em torno do centro. E = (σ; τ) = (<b>${f(g.sE)}</b>; <b>${f(g.tE)}</b>).<br><br><b>Truque sem conta:</b> do ponto B (σ3), trace uma reta inclinada <b>α = ${st.alpha}°</b> (sem dobrar). Onde ela corta o círculo é o E — veja a linha tracejada.`, anim: "E" },
       { k: ["eixos", "B", "A", "circ", "D", "baixo"], t: "Por que não usamos τ negativo?", x: `A metade de baixo é o <b>espelho</b> da de cima: mostra os mesmos planos, só com o sentido convencionado de τ trocado. Por <b>simetria</b>, basta trabalhar com a metade de cima.` }
     ];
   }

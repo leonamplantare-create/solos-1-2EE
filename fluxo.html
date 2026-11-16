@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rede de Fluxo</title>
+<meta name="description" content="Treino de contagem em redes de fluxo: canais de fluxo (NF) e quedas de potencial (ND), com redes aleatórias e correção explicada.">
+<script>try{var t=localStorage.getItem("solos2ee.theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="stylesheet" href="style.css">
+<script defer src="fluxo.js"></script>
+<script defer src="nav.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <button class="icon-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+  <a class="brand" href="index.html">Mecânica dos Solos 2 <span class="tag">2ª EE</span></a>
+  <span class="spacer"></span>
+  <a class="icon-btn" href="recalque.html" style="text-decoration:none">Recalque</a>
+  <a class="icon-btn" href="ensaios.html" style="text-decoration:none">Ensaios</a>
+  <button class="icon-btn" id="themeBtn" aria-label="Alternar tema claro/escuro">◐</button>
+</header>
+
+<div class="layout">
+<nav class="sidenav" id="sidenav" aria-label="Seções">
+  <div class="group">Rede de fluxo</div>
+  <ol>
+    <li><a href="#treino">Treino de contagem</a></li>
+    <li><a href="#regras">Como contar</a></li>
+  </ol>
+  <div class="group">Outros assuntos</div>
+  <ol>
+    <li><a href="recalque.html">Recalque (adensamento)</a></li>
+    <li><a href="ensaios.html">Ensaios UU, CU, CD</a></li>
+    <li><a href="ensaios.html#mohr">Círculo de Mohr</a></li>
+  </ol>
+</nav>
+
+<main>
+  <section class="block" id="treino">
+    <h2>Rede de fluxo — contar canais e quedas</h2>
+    <p class="lead">Olhe a rede e conte os <strong>canais de fluxo (N<sub>F</sub>)</strong>, as <strong>quedas de potencial (N<sub>D</sub>)</strong> e quantas quedas a água já atravessou até o ponto <strong>P</strong>. Depois, as duas continhas do quadro: <strong>Δh = h / N<sub>D</sub></strong> e a altura da água no <strong>piezômetro</strong> em P.</p>
+    <div class="fl-ctrl">
+      <label class="f">Tipo de rede
+        <select id="flTipo">
+          <option value="aleatorio">Aleatório</option>
+          <option value="pranchada">Pranchada (cortina)</option>
+          <option value="barragem">Barragem de concreto</option>
+          <option value="permeametro">Permeâmetro</option>
+        </select>
+      </label>
+      <label class="fl-chk"><input type="checkbox" id="flFrac"> Desafio: último canal incompleto (vale 0,5)</label>
+      <button type="button" class="btn primary" id="flNovo">Nova rede</button>
+    </div>
+
+    <div class="fl-grid">
+      <div class="card">
+        <svg id="flSvg" class="fl-svg" role="img" aria-label="Rede de fluxo para contar"></svg>
+        <div class="fl-views" role="group" aria-label="Ver contagem">
+          <span class="hint">Ver na figura:</span>
+          <button type="button" class="btn small on" data-v="rede">Só a rede</button>
+          <button type="button" class="btn small" data-v="linhas">Numerar as linhas</button>
+          <button type="button" class="btn small" data-v="canais">Pintar os canais</button>
+          <button type="button" class="btn small" data-v="quedas">Pintar as quedas</button>
+          <button type="button" class="btn small" data-v="p">Quedas até P</button>
+          <button type="button" class="btn small" data-v="piezo">Piezômetro em P</button>
+        </div>
+        <div class="fl-leg" id="flLeg"></div>
+      </div>
+      <div id="flBox"></div>
+    </div>
+  </section>
+
+  <section class="block" id="regras">
+    <h2>Como contar</h2>
+    <div class="grid2">
+      <div class="card">
+        <h4>N<sub>F</sub> — canais de fluxo</h4>
+        <p>Canal = <strong>espaço entre duas linhas de fluxo</strong> (as contínuas, por onde a água anda).</p>
+        <p><strong>Contam como linha de fluxo:</strong> o contorno da estrutura (pranchada, base da barragem, parede do permeâmetro) e o contorno impermeável do fundo.</p>
+        <p class="res">N<sub>F</sub> = nº de linhas de fluxo − 1</p>
+      </div>
+      <div class="card">
+        <h4>N<sub>D</sub> — quedas de potencial</h4>
+        <p>Queda = <strong>espaço entre duas equipotenciais</strong> (as tracejadas, que cortam o fluxo em ângulo reto).</p>
+        <p><strong>Contam como equipotencial:</strong> o terreno sob a água a montante (onde a água entra) e a jusante (onde sai).</p>
+        <p class="res">N<sub>D</sub> = nº de equipotenciais − 1</p>
+      </div>
+      <div class="card">
+        <h4>Quedas até um ponto</h4>
+        <p>Comece na <strong>montante</strong> (lado do NA mais alto) e conte quantas faixas a água atravessa até chegar à equipotencial do ponto.</p>
+      </div>
+      <div class="card">
+        <h4>Perda de carga por queda (Δh)</h4>
+        <p><strong>h</strong> = diferença entre o N.A. de montante e o de jusante. Essa carga é dividida igualmente entre as quedas:</p>
+        <p class="res">Δh = h / N<sub>D</sub></p>
+      </div>
+      <div class="card">
+        <h4>Piezômetro num ponto</h4>
+        <p>Um tubo colocado no ponto mostra até onde a água sobe. A cada queda atravessada ela "perde" Δh, então o nível no tubo fica abaixo do N.A. de montante:</p>
+        <p class="res">perda até o ponto = (quedas até o ponto) × Δh</p>
+        <p class="hint">Quanto mais perto da jusante, mais baixo fica o nível no piezômetro.</p>
+      </div>
+      <div class="card">
+        <h4>Erros mais comuns</h4>
+        <ul class="fl-ul">
+          <li>Contar <strong>linhas</strong> em vez de <strong>espaços</strong> (dá 1 a mais).</li>
+          <li>Esquecer os contornos (dá 1 a menos).</li>
+          <li>Trocar N<sub>F</sub> com N<sub>D</sub>.</li>
+          <li>Contar as quedas a partir da jusante.</li>
+          <li>Dividir h por N<sub>F</sub> em vez de N<sub>D</sub>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

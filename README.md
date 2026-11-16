@@ -5,6 +5,7 @@ Site estático de prática: exercícios corrigidos passo a passo e calculadoras.
 - `index.html` — página inicial com os assuntos
 - `recalque.html` — recalque por adensamento (Terzaghi)
 - `ensaios.html` — ensaios UU, CU, CD, cisalhamento direto e círculo de Mohr
+- `fluxo.html` / `fluxo.js` — rede de fluxo: contar canais (NF) e quedas (ND), Δh = h/ND e piezômetro
 - `exemplos-recalque.js` / `exemplos-ensaios.js` — exercícios prontos
 - `style.css` e os demais `.js` — visual e funcionamento
 
