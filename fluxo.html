@@ -38,14 +38,14 @@
 <main>
   <section class="block" id="treino">
     <h2>Rede de fluxo — contar canais e quedas</h2>
-    <p class="lead">Olhe a rede e conte os <strong>canais de fluxo (N<sub>F</sub>)</strong>, as <strong>quedas de potencial (N<sub>D</sub>)</strong> e quantas quedas a água já atravessou até o ponto <strong>P</strong>. Depois, as duas continhas do quadro: <strong>Δh = h / N<sub>D</sub></strong> e a altura da água no <strong>piezômetro</strong> em P.</p>
+    <p class="lead">Olhe a rede e conte os <strong>canais de fluxo (N<sub>F</sub>)</strong> e as <strong>quedas de potencial (N<sub>D</sub>)</strong>. Depois calcule <strong>Δh = h / N<sub>D</sub></strong> e a <strong>vazão q = k · h · N<sub>F</sub> / N<sub>D</sub></strong>.</p>
     <div class="fl-ctrl">
       <label class="f">Tipo de rede
         <select id="flTipo">
           <option value="aleatorio">Aleatório</option>
           <option value="pranchada">Pranchada (cortina)</option>
           <option value="barragem">Barragem de concreto</option>
-          <option value="permeametro">Permeâmetro</option>
+          <option value="permeametro">Permeâmetro (laboratório)</option>
         </select>
       </label>
       <label class="fl-chk"><input type="checkbox" id="flFrac"> Desafio: último canal incompleto (vale 0,5)</label>
@@ -62,7 +62,6 @@
           <button type="button" class="btn small" data-v="canais">Pintar os canais</button>
           <button type="button" class="btn small" data-v="quedas">Pintar as quedas</button>
           <button type="button" class="btn small" data-v="p">Quedas até P</button>
-          <button type="button" class="btn small" data-v="piezo">Piezômetro em P</button>
         </div>
         <div class="fl-leg" id="flLeg"></div>
       </div>
@@ -86,19 +85,15 @@
         <p class="res">N<sub>D</sub> = nº de equipotenciais − 1</p>
       </div>
       <div class="card">
-        <h4>Quedas até um ponto</h4>
-        <p>Comece na <strong>montante</strong> (lado do NA mais alto) e conte quantas faixas a água atravessa até chegar à equipotencial do ponto.</p>
-      </div>
-      <div class="card">
         <h4>Perda de carga por queda (Δh)</h4>
         <p><strong>h</strong> = diferença entre o N.A. de montante e o de jusante. Essa carga é dividida igualmente entre as quedas:</p>
         <p class="res">Δh = h / N<sub>D</sub></p>
       </div>
       <div class="card">
-        <h4>Piezômetro num ponto</h4>
-        <p>Um tubo colocado no ponto mostra até onde a água sobe. A cada queda atravessada ela "perde" Δh, então o nível no tubo fica abaixo do N.A. de montante:</p>
-        <p class="res">perda até o ponto = (quedas até o ponto) × Δh</p>
-        <p class="hint">Quanto mais perto da jusante, mais baixo fica o nível no piezômetro.</p>
+        <h4>Vazão (q)</h4>
+        <p>A vazão por metro de largura da estrutura usa o coeficiente de permeabilidade <strong>k</strong> (m/s), a carga <strong>h</strong> (m), e a razão entre canais e quedas:</p>
+        <p class="res">q = k · h · N<sub>F</sub> / N<sub>D</sub></p>
+        <p class="hint">N<sub>F</sub> (canais) vai no numerador e N<sub>D</sub> (quedas) no denominador. Não confunda!</p>
       </div>
       <div class="card">
         <h4>Erros mais comuns</h4>
@@ -106,8 +101,8 @@
           <li>Contar <strong>linhas</strong> em vez de <strong>espaços</strong> (dá 1 a mais).</li>
           <li>Esquecer os contornos (dá 1 a menos).</li>
           <li>Trocar N<sub>F</sub> com N<sub>D</sub>.</li>
-          <li>Contar as quedas a partir da jusante.</li>
           <li>Dividir h por N<sub>F</sub> em vez de N<sub>D</sub>.</li>
+          <li>Inverter N<sub>F</sub>/N<sub>D</sub> na vazão (canais vai em cima!).</li>
         </ul>
       </div>
     </div>

@@ -60,7 +60,8 @@
     const pk = rint(1, nd - 1);
     const pj = rint(1, Math.max(1, Math.floor(nf) - (Number.isInteger(nf) ? 1 : 0)));
     const h = Math.round(nd * pick([0.25, 0.5, 0.5, 0.75, 1]) * 100) / 100;
-    return { tipo, nf, nd, pk, pj, h };
+    const kperm = pick([1e-4, 2e-4, 5e-4, 1e-3, 2e-3, 5e-3, 1e-5, 5e-5]);
+    return { tipo, nf, nd, pk, pj, h, k: kperm };
   }
   const dH = () => ex.h / ex.nd;
 
@@ -136,7 +137,6 @@
       });
     }
     if (vista === "quedas") equis.slice(0, -1).forEach((_, k) => pintaFaixa(k, k % 2 ? "fl-q2" : "fl-q1"));
-    if (vista === "p" || vista === "piezo") for (let k = 0; k < ex.pk; k++) pintaFaixa(k, k % 2 ? "fl-q2" : "fl-q1");
 
     // linhas internas
     const forte = vista === "linhas";
@@ -194,9 +194,11 @@
       });
     }
     const mLbl = Math.max(0, (Math.floor(ex.nf + 1e-9) - 0.5) * D);
-    if (vista === "quedas" || vista === "p" || vista === "piezo") {
-      const ate = vista === "quedas" ? ex.nd : ex.pk;
-      for (let k = 0; k < ate; k++) { const q = P(mLbl, (k + 0.5) * D); out.push(txt(X(q.x), Y(q.y), k + 1, fsCel(mLbl - D / 2, k * D), "fl-forte")); }
+    if (vista === "quedas") {
+      for (let k = 0; k < ex.nd; k++) { const q = P(mLbl, (k + 0.5) * D); out.push(txt(X(q.x), Y(q.y), k + 1, fsCel(mLbl - D / 2, k * D), "fl-forte")); }
+    }
+    if (vista === "p") {
+      for (let k = 0; k < ex.pk; k++) { const q = P(mLbl, (k + 0.5) * D); out.push(txt(X(q.x), Y(q.y), k + 1, fsCel(mLbl - D / 2, k * D), "fl-forte")); }
     }
     if (forte) {
       linhasFluxo.forEach((m, j) => { const q = ex.tipo === "pranchada" ? { x: P(m, Nn).x, y: -0.06 * ymax } : P(m, (Math.floor(ex.nd / 2) + 0.5) * D); out.push(`<g class="fl-tag fl-tag-f">${tag(X(q.x), Y(q.y), j + 1)}</g>`); });
@@ -224,21 +226,12 @@
       out.push(`<line x1="${X(M)}" y1="${Y(nivelM)}" x2="${xc + 12}" y2="${Y(nivelM)}" class="fl-cota-ext"/>`, cota(xc, nivelM, yJ, hTxt));
     }
 
+
+    // pinturas até P
+    if (vista === "p") for (let k = 0; k < ex.pk; k++) pintaFaixa(k, k % 2 ? "fl-q2" : "fl-q1");
+
     // ponto P
     const pp = P(ex.pj * D, ex.pk * D);
-    if (vista === "piezo") {
-      const nivelP = nivelM + (ex.pk / ex.nd) * (yJ - nivelM);
-      const topo = Math.min(nivelM, topoEstr) - 0.04 * (ybot - ytop);
-      const w = 7;
-      let xt = X(pp.x);
-      if (ex.tipo === "pranchada" && Math.abs(xt - X(0)) < 16) xt = X(0) + (pp.x < 0 ? -16 : 16);   // não encostar na pranchada
-      out.push(`<rect x="${xt - w / 2}" y="${Y(nivelP)}" width="${w}" height="${Y(pp.y) - Y(nivelP)}" class="fl-piezo-agua"/>`);
-      out.push(`<path d="M${xt - w / 2},${Y(topo)}V${Y(pp.y)}M${xt + w / 2},${Y(topo)}V${Y(pp.y)}" class="fl-piezo"/>`);
-      if (xt !== X(pp.x)) out.push(`<path d="M${xt},${Y(pp.y)}H${X(pp.x)}" class="fl-piezo"/>`);
-      out.push(`<line x1="${xt - 16}" y1="${Y(nivelP)}" x2="${xt + 16}" y2="${Y(nivelP)}" class="fl-na-l"/>`);
-      out.push(`<line x1="${xt - 30}" y1="${Y(nivelM)}" x2="${xt + 30}" y2="${Y(nivelM)}" class="fl-cota-ext"/>`);
-      if (ex.pk > 0) out.push(cota(xt - 26, nivelM, nivelP, `${ex.pk} × Δh`, -1));
-    }
     out.push(`<circle cx="${X(pp.x)}" cy="${Y(pp.y)}" r="5.5" class="fl-p"/><text x="${X(pp.x) + 8}" y="${Y(pp.y) - 7}" font-size="15" class="fl-p-t">P</text>`);
 
     svg.innerHTML = out.join("");
@@ -254,8 +247,7 @@
       linhas: `Linhas numeradas: <b>${nF}</b> linhas de fluxo (azul, contando os 2 contornos) e <b>${ex.nd + 1}</b> equipotenciais (laranja, contando entrada e saída). Os canais e as quedas são os <b>espaços</b> entre elas → uma a menos.`,
       canais: `Cada cor é um canal de fluxo: <b>N<sub>F</sub> = ${fmt(ex.nf)}</b>.` + (Number.isInteger(ex.nf) ? "" : " O último canal tem metade da largura dos outros, por isso vale 0,5."),
       quedas: `Cada faixa é uma queda de potencial: <b>N<sub>D</sub> = ${ex.nd}</b>, contadas da montante para a jusante.`,
-      p: `Da montante até a equipotencial que passa por P a água atravessou <b>${ex.pk}</b> quedas (faltam ${ex.nd - ex.pk} até a jusante).`,
-      piezo: `Cada queda perde Δh = h / N<sub>D</sub> = ${fmt(ex.h)} / ${ex.nd} = <b>${fmt(dH())} m</b>. Até P a água perdeu ${ex.pk} × ${fmt(dH())} = <b>${fmt(ex.pk * dH())} m</b>: no piezômetro ela sobe até ${fmt(ex.pk * dH())} m abaixo do N.A. de montante (ainda ${fmt((ex.nd - ex.pk) * dH())} m acima do N.A. de jusante).`
+      p: `Da montante até a equipotencial que passa por P a água atravessou <b>${ex.pk}</b> quedas (faltam ${ex.nd - ex.pk} até a jusante).`
     };
     $("#flLeg").innerHTML = L[vista];
     $$(".fl-views [data-v]").forEach((b) => b.classList.toggle("on", b.dataset.v === vista));
@@ -266,6 +258,10 @@
   function perguntas() {
     const G = GEO[ex.tipo], NF = ex.nf, ND = ex.nd, inteiro = Number.isInteger(NF);
     const linhasF = Math.floor(NF) + (inteiro ? 1 : 2);
+    const kStr = ex.k.toExponential(0).replace("+", "").replace("e", " × 10^").replace("^", "⁻").replace("⁻-", "⁻");
+    const kFmt = ex.k < 1e-3 ? (ex.k * 1e4).toString().replace(".", ",") + " × 10⁻⁴" : fmt(ex.k);
+    const vazao = ex.k * ex.h * NF / ND;
+    const vazaoFmt = vazao.toExponential(2).replace(".", ",");
     return [
       {
         t: "Quantos canais de fluxo (N<sub>F</sub>)?", v: NF, tol: inteiro ? 0 : 0.15, ver: "canais",
@@ -293,20 +289,9 @@
         }
       },
       {
-        t: "Até o ponto P, quantas quedas a água já atravessou (contando da montante)?", v: ex.pk, tol: 0, ver: "p",
-        dica: `Comece na montante (${ex.tipo === "permeametro" ? "face de cima" : "lado do N.A. mais alto"}) e conte as faixas até chegar à linha tracejada que passa por P.`,
-        sol: `P está na ${ex.pk}ª equipotencial depois da entrada → ${ex.pk} quedas percorridas (faltam ${ND - ex.pk} até a jusante).`,
-        diag(v) {
-          if (v === ND - ex.pk) return `Você contou a partir da jusante. A água vem da montante (${ex.tipo === "permeametro" ? "face de cima" : "lado do N.A. mais alto"}): conte a partir de lá.`;
-          if (v === ex.pk + 1) return `Você contou as linhas tracejadas (inclusive a da entrada). Conte as FAIXAS atravessadas: uma a menos.`;
-          if (v === ex.pk - 1) return `Faltou uma faixa: a primeira queda começa na própria superfície de entrada (montante).`;
-          return `Siga uma linha de fluxo da montante até P e conte quantas faixas tracejadas ela atravessa.`;
-        }
-      },
-      {
-        t: `Perda de carga em cada queda: Δh = h / N<sub>D</sub> (m), com h = ${fmt(ex.h)} m`, v: dH(), tol: 0.011, ver: "piezo",
+        t: `Perda de carga em cada queda: Δh = h / N<sub>D</sub> (m), com h = ${fmt(ex.h)} m`, v: dH(), tol: 0.011, ver: "quedas",
         dica: `h é a diferença entre o N.A. de montante e o de jusante (a cota "h" no desenho). Divida pelo número de quedas N_D (não pelo de canais).`,
-        sol: `Δh = h / N_D = ${fmt(ex.h)} / ${ND} = ${fmt(dH())} m. Toda queda perde a mesma carga — foi por isso que a rede foi desenhada com quedas iguais.`,
+        sol: `Δh = h / N_D = ${fmt(ex.h)} / ${ND} = ${fmt(dH())} m. Toda queda perde a mesma carga.`,
         diag(v) {
           const perto = (x) => Math.abs(v - x) < 0.011;
           if (perto(ex.h / NF)) return `Você dividiu por N_F (canais). A carga se perde ao atravessar as QUEDAS: divida por N_D = ${ND}.`;
@@ -317,15 +302,38 @@
         }
       },
       {
-        t: "Piezômetro em P: a água no tubo fica quantos metros abaixo do N.A. de montante?", v: ex.pk * dH(), tol: 0.011, ver: "piezo",
-        dica: `Até P a água já atravessou algumas quedas (pergunta 3), e cada uma tira Δh (pergunta 4). Multiplique as duas.`,
-        sol: `Até P foram ${ex.pk} quedas × Δh = ${ex.pk} × ${fmt(dH())} = ${fmt(ex.pk * dH())} m de carga perdida. O piezômetro em P mostra a água ${fmt(ex.pk * dH())} m abaixo do N.A. de montante (ou ${fmt((ND - ex.pk) * dH())} m acima do N.A. de jusante).`,
+        t: `Vazão: q = k · h · N<sub>F</sub> / N<sub>D</sub> (m³/s por metro de largura), com k = ${kFmt} m/s e h = ${fmt(ex.h)} m`, v: vazao, tol: vazao * 0.05, ver: "canais",
+        dica: `A fórmula da vazão por metro de largura é q = k · h · (N_F / N_D). Use o k = ${kFmt} m/s, h = ${fmt(ex.h)} m e os valores de N_F e N_D que você contou.`,
+        sol: `q = k · h · N_F / N_D = ${kFmt} × ${fmt(ex.h)} × ${fmt(NF)} / ${ND} = ${vazaoFmt} m³/s por metro de largura.`,
         diag(v) {
+          const perto = (x) => Math.abs(v - x) / Math.max(vazao, 1e-12) < 0.1;
+          if (perto(ex.k * ex.h * ND / NF)) return `Você inverteu N_F e N_D na fórmula. É q = k · h · N_F / N_D (canais no numerador, quedas no denominador).`;
+          if (perto(ex.h * NF / ND)) return `Faltou multiplicar pelo coeficiente de permeabilidade k.`;
+          if (perto(ex.k * NF / ND)) return `Faltou multiplicar pela carga h.`;
+          return `q = k · h · N_F / N_D. Substitua os valores e calcule.`;
+        }
+      },
+      {
+        t: "Quantas quedas de potencial da montante até o ponto P?", v: ex.pk, tol: 0, ver: "p",
+        dica: `Conte as faixas entre equipotenciais da montante até a equipotencial que passa por P. Veja o ponto marcado na figura.`,
+        sol: `Da montante até P a água atravessou ${ex.pk} quedas de potencial.`,
+        diag(v) {
+          if (v === ND) return `Esse é o total de quedas da rede inteira. Conte só as quedas da montante até P, não até a jusante.`;
+          if (v === ND - ex.pk) return `Você contou da jusante para a montante. Conte da montante (onde a água entra) até P.`;
+          return `Olhe o ponto P na figura e conte quantas faixas ele atravessou desde a montante.`;
+        }
+      },
+      {
+        t: `Carga hidráulica no ponto P (m), com h = ${fmt(ex.h)} m`, v: ex.h - ex.pk * dH(), tol: 0.011, ver: "p",
+        dica: `A carga em P é a carga total menos a perda acumulada até P: h_P = h − (quedas até P) × Δh.`,
+        sol: `h_P = h − quedas_até_P × Δh = ${fmt(ex.h)} − ${ex.pk} × ${fmt(dH())} = ${fmt(ex.h - ex.pk * dH())} m.`,
+        diag(v) {
+          const hP = ex.h - ex.pk * dH();
           const perto = (x) => Math.abs(v - x) < 0.011;
-          if (perto((ND - ex.pk) * dH())) return `Esse é quanto ainda FALTA perder até a jusante (acima do N.A. de jusante). A pergunta é quanto já perdeu desde a montante: quedas até P × Δh.`;
-          if (perto((ex.pk + 1) * dH()) || perto((ex.pk - 1) * dH())) return `A conta é essa, mas o número de quedas até P está com 1 a mais ou a menos. Reveja a pergunta 3.`;
-          if (perto(ex.pk)) return `Esse é o número de quedas. Multiplique pelo Δh de cada queda.`;
-          return `Carga perdida até P = (quedas até P) × Δh.`;
+          if (perto(ex.pk * dH())) return `Esse é a perda de carga até P, não a carga restante. Subtraia de h: h_P = h − quedas_até_P × Δh.`;
+          if (perto(ex.h - ex.pk)) return `Você subtraiu só o número de quedas, sem multiplicar por Δh. Use h_P = h − quedas_até_P × Δh.`;
+          if (perto(ex.h + ex.pk * dH())) return `Você somou em vez de subtrair. A cada queda a água PERDE carga: h_P = h − quedas_até_P × Δh.`;
+          return `h_P = h − (quedas até P) × Δh. Calcule Δh primeiro e depois subtraia a perda acumulada.`;
         }
       }
     ];
@@ -336,8 +344,9 @@
     vista = "rede";
     const G = GEO[ex.tipo];
     const box = $("#flBox");
+    const kFmt2 = ex.k < 1e-3 ? (ex.k * 1e4).toString().replace(".", ",") + " × 10⁻⁴" : fmt(ex.k);
     box.innerHTML = `
-      <div class="banner"><strong>${esc(G.nome)}</strong>${Number.isInteger(ex.nf) ? "" : " · desafio: canal incompleto"}</div>
+      <div class="banner"><strong>${esc(G.nome)}</strong>${ex.tipo === "permeametro" ? " <span style=\"opacity:.7;font-size:.85em\">(equipamento de laboratório)</span>" : ""}${Number.isInteger(ex.nf) ? "" : " · desafio: canal incompleto"} · k = ${kFmt2} m/s · h = ${fmt(ex.h)} m</div>
       ${qs.map((q, i) => `
         <div class="tq" id="flq${i}">
           <div class="t">${i + 1}. ${q.t}</div>
@@ -407,7 +416,7 @@
       try { localStorage.setItem("solos2ee.theme", root.dataset.theme); } catch (e) { /* sem storage */ }
     };
     const m = location.hash.match(/#fl=([\w-]+)/);
-    if (m) { try { const e = JSON.parse(unb64(m[1])); if (GEO[e.tipo] && e.nd > 1 && e.nf > 0) { if (!(e.h > 0)) e.h = e.nd * 0.5; ex = e; } } catch (e) { toast("Link de rede inválido"); } }
+    if (m) { try { const e = JSON.parse(unb64(m[1])); if (GEO[e.tipo] && e.nd > 1 && e.nf > 0) { if (!(e.h > 0)) e.h = e.nd * 0.5; if (!(e.k > 0)) e.k = 1e-4; ex = e; } } catch (e) { toast("Link de rede inválido"); } }
     if (!ex) ex = aleatorio("pranchada", false);
     render(true);
   }

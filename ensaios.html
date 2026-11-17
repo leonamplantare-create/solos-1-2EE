@@ -118,14 +118,61 @@
 
   <section class="block" id="resumo">
     <h2>Resumo dos ensaios (como respondido em sala)</h2>
-    <div class="table-wrap"><table>
-      <tr><th></th><th>Triaxial UU</th><th>Triaxial CU</th><th>Triaxial CD</th><th>Cisalhamento direto</th></tr>
-      <tr><th>Nome</th><td>Não adensado, não drenado</td><td>Adensado, não drenado</td><td>Adensado, drenado</td><td>—</td></tr>
-      <tr><th>Parâmetros medidos</th><td>C (Cu)</td><td>C e φ</td><td>c' e φ'</td><td>τ, δH e δV (deslocamentos)</td></tr>
-      <tr><th>Nível de tensão na ruptura</th><td>Total</td><td>Total</td><td>Efetiva</td><td>Indefinida (não tem controle de drenagem)</td></tr>
-      <tr><th>Equação da envoltória</th><td>τ = Cu (φ = 0)</td><td>τ = c + σ·tgφ</td><td>τ = c' + σ'·tgφ'</td><td>τ = c + σ·tgφ (se c = 0: τ = σ·tgφ)</td></tr>
-      <tr><th>Como reconhecer no gráfico</th><td>Círculos iguais, envoltória horizontal</td><td>Círculos, envoltória inclinada, eixo σ</td><td>Círculos, envoltória inclinada, eixo σ'</td><td>Pontos (x), não círculos</td></tr>
-    </table></div>
+    <p>Clique em um ensaio para ver o gráfico e os parâmetros marcados.</p>
+    <div class="resumo-cards" id="resumoCards"></div>
+    <div class="resumo-detalhe hidden" id="resumoDetalhe">
+      <div class="card">
+        <div class="resumo-header">
+          <h3 id="resumoTitulo"></h3>
+          <button type="button" class="btn small" id="resumoFechar">✕ Fechar</button>
+        </div>
+        <div class="resumo-grid">
+          <div class="resumo-grafico">
+            <svg id="resumoSvg" role="img" aria-label="Gráfico do ensaio"></svg>
+            <div class="btnrow resumo-marcas">
+              <button type="button" class="btn small" data-marca="env">Envoltória</button>
+              <button type="button" class="btn small" data-marca="coesao">Coesão (c)</button>
+              <button type="button" class="btn small" data-marca="phi">Ângulo φ</button>
+              <button type="button" class="btn small" data-marca="tmax">τ máx</button>
+              <button type="button" class="btn small" data-marca="todos">Todos</button>
+            </div>
+          </div>
+          <div class="resumo-info" id="resumoInfo"></div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Animação: como montar a envoltória</h3>
+    <p>Escolha o tipo de ensaio e veja o passo a passo animado de como a reta é traçada.</p>
+    <div class="btnrow">
+      <button type="button" class="btn" data-anima="UU">UU</button>
+      <button type="button" class="btn" data-anima="CU">CU</button>
+      <button type="button" class="btn" data-anima="CD">CD</button>
+      <button type="button" class="btn" data-anima="DIRETO">Cisalhamento direto</button>
+    </div>
+    <div class="hidden" id="animaBox">
+      <div class="card">
+        <div class="resumo-grid">
+          <div class="resumo-grafico">
+            <svg id="animaSvg" role="img" aria-label="Animação da envoltória"></svg>
+          </div>
+          <div>
+            <div class="mz-step">
+              <div class="mz-num" id="animaNum"></div>
+              <h4 id="animaTit"></h4>
+              <p id="animaTxt"></p>
+            </div>
+            <div class="mz-dots" id="animaDots"></div>
+            <div class="btnrow">
+              <button type="button" class="btn" id="animaAnt">◀ Anterior</button>
+              <button type="button" class="btn primary" id="animaProx">Próximo ▶</button>
+              <button type="button" class="btn" id="animaAuto">▶ Reproduzir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <h3>Para tirar c e φ do gráfico</h3>
     <div class="formula">\[ c = \tau \text{ no } \sigma = 0 \qquad \text{tg}\,\varphi = \frac{\tau_2 - \tau_1}{\sigma_2 - \sigma_1} = \frac{\tau - c}{\sigma} \qquad \varphi = \text{arctg}(\text{tg}\,\varphi) \]</div>
     <p>Exemplo da aula (CU): c = 3 e o ponto (3; 4) → 4 = 3 + 3·tgφ → tgφ = 1/3 → φ = arctg(1/3) = 18,43°.</p>

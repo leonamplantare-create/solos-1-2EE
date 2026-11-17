@@ -285,6 +285,34 @@ label.check { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
 .topic p { margin: 0; color: var(--muted); font-size: .92rem; }
 footer.foot { max-width: 960px; margin: 24px auto; padding: 16px; color: var(--muted); font-size: .85rem; }
 
+/* ---------- resumo interativo ---------- */
+.resumo-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 14px 0; }
+.resumo-card {
+  border: 2px solid var(--border); border-radius: 10px; padding: 14px 16px; cursor: pointer;
+  background: var(--surface); transition: border-color .2s, box-shadow .2s;
+}
+.resumo-card:hover { border-color: var(--primary); box-shadow: var(--shadow); }
+.resumo-card.active { border-color: var(--primary); background: var(--primary-soft); }
+.resumo-card h4 { margin: 0 0 4px; color: var(--primary); font-size: 1rem; }
+.resumo-card .resumo-sub { font-size: .82rem; color: var(--muted); margin: 0; }
+.resumo-detalhe { margin: 16px 0; }
+.resumo-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.resumo-header h3 { margin: 0; }
+.resumo-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .resumo-grid { grid-template-columns: 1fr; } }
+.resumo-grafico svg { width: 100%; height: auto; display: block; }
+.resumo-marcas { flex-wrap: wrap; }
+.resumo-marcas .btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.resumo-info table { font-size: .9rem; }
+.resumo-info .stat { margin-bottom: 8px; }
+
+/* animação da envoltória */
+@keyframes envDraw { from { stroke-dashoffset: var(--env-len); } to { stroke-dashoffset: 0; } }
+@keyframes envFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.env-anim-line { animation: envDraw 1.2s ease-out forwards; }
+.env-anim-pt { animation: mzPop .6s ease-out; transform-box: fill-box; transform-origin: center; }
+.env-anim-label { animation: envFade .5s ease-out .3s both; }
+
 @media print {
   .topbar, .sidenav, .btnrow, #calcForm { display: none !important; }
   .layout { display: block; }

@@ -537,6 +537,340 @@
     $("#ensCalcOut").innerHTML = html;
   }
 
+  // ---------- resumo interativo ----------
+  const RESUMO_DATA = [
+    { tipo: "UU", titulo: "Triaxial UU", sub: "Não adensado, não drenado", c: 3, tg: 0, s3: [0, 2, 4],
+      info: [
+        ["Nome", "Ensaio não adensado, não drenado"],
+        ["Parâmetros medidos", "C (coesão não drenada Cu)"],
+        ["Nível de tensão na ruptura", "Total"],
+        ["Equação da envoltória", "τ = Cu (φ = 0)"],
+        ["Como reconhecer", "Círculos iguais, envoltória horizontal"]
+      ]},
+    { tipo: "CU", titulo: "Triaxial CU", sub: "Adensado, não drenado", c: 3, tg: 1/3, s3: [0, 1, 2],
+      info: [
+        ["Nome", "Ensaio adensado, não drenado"],
+        ["Parâmetros medidos", "C e φ"],
+        ["Nível de tensão na ruptura", "Total"],
+        ["Equação da envoltória", "τ = c + σ·tgφ"],
+        ["Como reconhecer", "Círculos, envoltória inclinada, eixo σ"]
+      ]},
+    { tipo: "CD", titulo: "Triaxial CD", sub: "Adensado, drenado", c: 1, tg: 2/3, s3: [0, 0.8, 1.6],
+      info: [
+        ["Nome", "Ensaio adensado, drenado"],
+        ["Parâmetros medidos", "c' e φ'"],
+        ["Nível de tensão na ruptura", "Efetiva"],
+        ["Equação da envoltória", "τ = c' + σ'·tgφ'"],
+        ["Como reconhecer", "Círculos, envoltória inclinada, eixo σ'"]
+      ]},
+    { tipo: "DIRETO", titulo: "Cisalhamento direto", sub: "—", c: 0, tg: 1, sig: [2, 4, 6, 8],
+      info: [
+        ["Nome", "Ensaio de cisalhamento direto"],
+        ["Parâmetros medidos", "τ, δH e δV (deslocamentos)"],
+        ["Nível de tensão na ruptura", "Indefinida (sem controle de drenagem)"],
+        ["Equação da envoltória", "τ = c + σ·tgφ (se c = 0: τ = σ·tgφ)"],
+        ["Como reconhecer", "Pontos (x), não círculos"]
+      ]}
+  ];
+
+  let resumoAtivo = null, marcaAtiva = null;
+
+  function initResumo() {
+    const box = $("#resumoCards");
+    if (!box) return;
+    RESUMO_DATA.forEach((r, i) => {
+      const d = document.createElement("div");
+      d.className = "resumo-card";
+      d.innerHTML = `<h4>${esc(r.titulo)}</h4><p class="resumo-sub">${esc(r.sub)}</p>`;
+      d.onclick = () => abrirResumo(i);
+      box.appendChild(d);
+    });
+    $("#resumoFechar").onclick = fecharResumo;
+    $$("[data-marca]").forEach(b => b.onclick = () => marcar(b.dataset.marca));
+  }
+
+  function abrirResumo(i) {
+    resumoAtivo = i;
+    const r = RESUMO_DATA[i];
+    const ex = { id: "resumo", tipo: r.tipo, c: r.c, tg: r.tg, s3: r.s3, sig: r.sig, modo: "identificar" };
+    $$(".resumo-card").forEach((c, j) => c.classList.toggle("active", j === i));
+    $("#resumoDetalhe").classList.remove("hidden");
+    $("#resumoTitulo").textContent = r.titulo;
+    draw($("#resumoSvg"), ex, { leitura: true });
+    marcaAtiva = null;
+    $$("[data-marca]").forEach(b => b.classList.remove("on"));
+
+    const phi = deg(Math.atan(r.tg));
+    let html = `<div class="table-wrap"><table>`;
+    r.info.forEach(([k, v]) => html += `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`);
+    html += `</table></div>`;
+    html += `<div class="summary" style="margin-top:12px">`;
+    html += `<div class="stat"><div class="k">${r.tipo === "CD" ? "c'" : r.tipo === "UU" ? "Cu" : "c"}</div><div class="v">${fmtg(r.c, 2)} kPa</div></div>`;
+    html += `<div class="stat"><div class="k">${r.tipo === "CD" ? "φ'" : "φ"}</div><div class="v">${fmt(phi, 2)}°</div></div>`;
+    html += `</div>`;
+    $("#resumoInfo").innerHTML = html;
+    $("#resumo").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function fecharResumo() {
+    resumoAtivo = null;
+    $$(".resumo-card").forEach(c => c.classList.remove("active"));
+    $("#resumoDetalhe").classList.add("hidden");
+  }
+
+  function marcar(tipo) {
+    if (resumoAtivo === null) return;
+    const r = RESUMO_DATA[resumoAtivo];
+    const ex = { id: "resumo", tipo: r.tipo, c: r.c, tg: r.tg, s3: r.s3, sig: r.sig, modo: "identificar" };
+
+    if (marcaAtiva === tipo) {
+      marcaAtiva = null;
+      draw($("#resumoSvg"), ex, { leitura: true });
+      $$("[data-marca]").forEach(b => b.classList.remove("on"));
+      return;
+    }
+    marcaAtiva = tipo;
+    $$("[data-marca]").forEach(b => b.classList.toggle("on", b.dataset.marca === tipo || b.dataset.marca === "todos"));
+
+    draw($("#resumoSvg"), ex, { leitura: true });
+    const svg = $("#resumoSvg");
+    const css = getComputedStyle(document.documentElement), col = (n) => css.getPropertyValue(n).trim();
+    const vb = svg.getAttribute("viewBox").split(" ").map(Number);
+    const W = vb[2], H = vb[3];
+    const cs = circulos(ex), ps = pontos(ex);
+    let smax = 10;
+    cs.forEach(c => smax = Math.max(smax, c.s1 + 0.5));
+    ps.forEach(p => smax = Math.max(smax, p.s + 1));
+    smax = Math.ceil(smax / 2) * 2;
+    let tmax = 4;
+    cs.forEach(c => tmax = Math.max(tmax, c.r + 0.5));
+    ps.forEach(p => tmax = Math.max(tmax, p.t + 0.5));
+    tmax = Math.max(tmax, Math.min(ex.c + smax * ex.tg, smax * 0.9) + 0.5);
+    tmax = Math.ceil(Math.max(tmax, smax * 0.4) / 2) * 2;
+    const L = 46, R = 18, Tp = 16;
+    const k = (520 - L - R) / smax;
+    const X = (s) => L + s * k, Y = (t) => Tp + (tmax - t) * k;
+
+    let overlay = "";
+    const showEnv = tipo === "env" || tipo === "todos";
+    const showC = tipo === "coesao" || tipo === "todos";
+    const showPhi = tipo === "phi" || tipo === "todos";
+    const showTmax = tipo === "tmax" || tipo === "todos";
+
+    if (showEnv) {
+      overlay += `<line x1="${X(0)}" y1="${Y(ex.c)}" x2="${X(smax)}" y2="${Y(ex.c + smax * ex.tg)}" stroke="${col("--accent")}" stroke-width="4" opacity=".6"/>`;
+      overlay += `<text x="${X(smax) - 4}" y="${Y(ex.c + smax * ex.tg) - 8}" font-size="13" font-weight="700" fill="${col("--accent")}" text-anchor="end">envoltória</text>`;
+    }
+    if (showC) {
+      overlay += `<circle cx="${X(0)}" cy="${Y(ex.c)}" r="7" fill="none" stroke="${col("--bad")}" stroke-width="3"/>`;
+      overlay += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(ex.c)}" stroke="${col("--bad")}" stroke-width="2.5" stroke-dasharray="5 3"/>`;
+      const cName = r.tipo === "UU" ? "Cu" : r.tipo === "CD" ? "c'" : "c";
+      overlay += `<text x="${X(0) + 10}" y="${Y(ex.c) - 4}" font-size="13" font-weight="700" fill="${col("--bad")}">${cName} = ${fmtg(ex.c, 2)}</text>`;
+    }
+    if (showPhi && ex.tg > 0) {
+      const phi = deg(Math.atan(ex.tg));
+      const arcR = 40;
+      const endX = arcR * Math.cos(Math.atan(ex.tg));
+      const endY = arcR * Math.sin(Math.atan(ex.tg));
+      overlay += `<line x1="${X(0)}" y1="${Y(ex.c)}" x2="${X(4)}" y2="${Y(ex.c)}" stroke="${col("--water")}" stroke-width="2" stroke-dasharray="4 3"/>`;
+      overlay += `<path d="M ${X(0) + arcR} ${Y(ex.c)} A ${arcR} ${arcR} 0 0 0 ${X(0) + endX} ${Y(ex.c) - endY}" fill="none" stroke="${col("--water")}" stroke-width="2.5"/>`;
+      const fName = r.tipo === "CD" ? "φ'" : "φ";
+      overlay += `<text x="${X(0) + arcR + 4}" y="${Y(ex.c) - 8}" font-size="13" font-weight="700" fill="${col("--water")}">${fName} = ${fmt(phi, 2)}°</text>`;
+    }
+    if (showTmax && cs.length > 0) {
+      const c0 = cs[cs.length - 1];
+      overlay += `<line x1="${X(c0.cen)}" y1="${Y(0)}" x2="${X(c0.cen)}" y2="${Y(c0.r)}" stroke="${col("--ok")}" stroke-width="2.5" stroke-dasharray="5 3"/>`;
+      overlay += `<circle cx="${X(c0.cen)}" cy="${Y(c0.r)}" r="6" fill="${col("--ok")}" opacity=".7"/>`;
+      overlay += `<text x="${X(c0.cen) + 8}" y="${Y(c0.r) - 6}" font-size="12" font-weight="700" fill="${col("--ok")}">τmáx = ${fmtg(c0.r, 2)}</text>`;
+    }
+    if (showTmax && ps.length > 0) {
+      const pMax = ps.reduce((a, b) => b.t > a.t ? b : a);
+      overlay += `<circle cx="${X(pMax.s)}" cy="${Y(pMax.t)}" r="6" fill="${col("--ok")}" opacity=".7"/>`;
+      overlay += `<text x="${X(pMax.s) + 8}" y="${Y(pMax.t) - 6}" font-size="12" font-weight="700" fill="${col("--ok")}">τmáx = ${fmtg(pMax.t, 2)}</text>`;
+    }
+
+    if (overlay) svg.innerHTML += `<g class="env-anim-pt">${overlay}</g>`;
+  }
+
+  // ---------- animação da envoltória ----------
+  let animaTipo = null, animaPasso = 0, animaTimer = null;
+
+  const ANIMA_EXEMPLOS = {
+    UU:     { c: 3, tg: 0, s3: [0, 2, 4] },
+    CU:     { c: 2, tg: 0.5, s3: [0, 1, 2] },
+    CD:     { c: 1, tg: 0.75, s3: [0, 0.6, 1.4] },
+    DIRETO: { c: 1, tg: 0.6, sig: [2, 4, 6, 8] }
+  };
+
+  function animaPassos(tipo) {
+    const d = ANIMA_EXEMPLOS[tipo], ex = { id: "anima", tipo, c: d.c, tg: d.tg, s3: d.s3, sig: d.sig, modo: "identificar" };
+    const tp = TIPOS[tipo], phi = deg(Math.atan(ex.tg));
+    const cNome = tipo === "UU" ? "Cu" : tipo === "CD" ? "c'" : "c";
+    const fNome = tipo === "CD" ? "φ'" : "φ";
+    const eixo = tp.eixo;
+
+    const steps = [
+      { keys: ["grid"], title: "Os eixos", text: `Montamos o gráfico τ × ${eixo} (kPa). No eixo horizontal fica a tensão normal e no vertical a tensão cisalhante.` }
+    ];
+
+    if (tipo !== "DIRETO") {
+      steps.push({ keys: ["grid", "circ"], title: "Os círculos de Mohr", text: `Cada ensaio (uma pressão confinante σ3 diferente) produz um círculo de Mohr. Os círculos vão de σ3 até σ1 sobre o eixo ${eixo}.` });
+      if (tipo === "UU") {
+        steps.push({ keys: ["grid", "circ", "env"], title: "A envoltória horizontal", text: `No UU todos os círculos têm o mesmo raio (= Cu = ${fmtg(ex.c, 2)} kPa), porque a resistência não muda com a pressão confinante. A envoltória é uma <strong>reta horizontal</strong> tangente aos círculos.` });
+        steps.push({ keys: ["grid", "circ", "env", "c"], title: "Coesão Cu", text: `A coesão não drenada Cu = ${fmtg(ex.c, 2)} kPa é a altura da envoltória: o valor de τ onde ela fica. No UU, φ = 0°.` });
+      } else {
+        steps.push({ keys: ["grid", "circ", "tan"], title: "Tangente aos círculos", text: `A envoltória é a reta que <strong>tangencia</strong> todos os círculos. Cada ponto de tangência é onde aquele ensaio rompe.` });
+        steps.push({ keys: ["grid", "circ", "tan", "c"], title: `Coesão ${cNome}`, text: `${cNome} = ${fmtg(ex.c, 2)} kPa: onde a reta cruza o eixo τ (σ = 0). É o intercepto da envoltória.` });
+        steps.push({ keys: ["grid", "circ", "tan", "c", "phi"], title: `Ângulo ${fNome}`, text: `${fNome} = ${fmt(phi, 2)}° (tg${fNome} = ${fmtg(ex.tg, 4)}): a inclinação da reta. Quanto maior φ, mais a resistência cresce com σ.` });
+      }
+    } else {
+      steps.push({ keys: ["grid", "pts"], title: "Pontos de ruptura", text: `No cisalhamento direto medimos diretamente os pares (σ, τ) da ruptura. Cada ponto (×) é uma amostra ensaiada com uma tensão normal diferente.` });
+      steps.push({ keys: ["grid", "pts", "env"], title: "A reta de ajuste", text: `A envoltória é a reta que melhor se ajusta aos pontos de ruptura: τ = c + σ·tgφ.` });
+      if (ex.c > 0) {
+        steps.push({ keys: ["grid", "pts", "env", "c"], title: "Coesão c", text: `c = ${fmtg(ex.c, 2)} kPa: onde a reta cruza o eixo τ.` });
+      }
+      steps.push({ keys: ["grid", "pts", "env", "c", "phi"], title: "Ângulo φ", text: `φ = ${fmt(phi, 2)}° (tgφ = ${fmtg(ex.tg, 4)}): a inclinação da reta.` });
+    }
+
+    steps.push({ keys: ["grid", tipo !== "DIRETO" ? "circ" : "pts", "tan", "c", "phi", "eq"], title: "Equação final", text: `A equação da envoltória é: <strong>${label("eq", tp.eq)}</strong>` + (tipo !== "UU" ? ` = ${fmtg(ex.c, 2)} + ${fmtg(ex.tg, 4)}·${eixo}` : ` = ${fmtg(ex.c, 2)} kPa`) + `.` });
+
+    return { ex, steps };
+  }
+
+  function drawAnima(svg, ex, visKeys) {
+    const css = getComputedStyle(document.documentElement), col = (n) => css.getPropertyValue(n).trim();
+    const cs = circulos(ex), ps = pontos(ex);
+    let smax = 10;
+    cs.forEach(c => smax = Math.max(smax, c.s1 + 0.5));
+    ps.forEach(p => smax = Math.max(smax, p.s + 1));
+    smax = Math.ceil(smax / 2) * 2;
+    let tmax = 4;
+    cs.forEach(c => tmax = Math.max(tmax, c.r + 0.5));
+    ps.forEach(p => tmax = Math.max(tmax, p.t + 0.5));
+    tmax = Math.max(tmax, Math.min(ex.c + smax * ex.tg, smax * 0.9) + 0.5);
+    tmax = Math.ceil(Math.max(tmax, smax * 0.4) / 2) * 2;
+    const L = 46, R = 18, Tp = 16, Bt = 40, W = 520;
+    const k = (W - L - R) / smax;
+    const H = Tp + tmax * k + Bt;
+    const X = (s) => L + s * k, Y = (t) => Tp + (tmax - t) * k;
+
+    let s = "";
+    // grid
+    const showGrid = visKeys.includes("grid");
+    if (showGrid) {
+      for (let i = 0; i <= smax; i++) s += `<line x1="${X(i)}" x2="${X(i)}" y1="${Y(0)}" y2="${Y(tmax)}" stroke="${col("--border")}" stroke-width="${i % 2 ? .5 : 1}"/>`;
+      for (let j = 0; j <= tmax; j++) s += `<line x1="${X(0)}" x2="${X(smax)}" y1="${Y(j)}" y2="${Y(j)}" stroke="${col("--border")}" stroke-width="${j % 2 ? .5 : 1}"/>`;
+      for (let i = 2; i <= smax; i += 2) s += `<text x="${X(i)}" y="${Y(0) + 16}" font-size="12" text-anchor="middle" fill="${col("--muted")}">${i}</text>`;
+      for (let j = 2; j <= tmax; j += 2) s += `<text x="${X(0) - 7}" y="${Y(j) + 4}" font-size="12" text-anchor="end" fill="${col("--muted")}">${j}</text>`;
+      s += `<line x1="${X(0)}" x2="${X(smax) + 8}" y1="${Y(0)}" y2="${Y(0)}" stroke="${col("--text")}" stroke-width="1.8"/>`;
+      s += `<line x1="${X(0)}" x2="${X(0)}" y1="${Y(0)}" y2="${Y(tmax) - 8}" stroke="${col("--text")}" stroke-width="1.8"/>`;
+      s += `<text x="${X(smax) + 6}" y="${Y(0) - 8}" font-size="15" font-style="italic" fill="${col("--text")}">${TIPOS[ex.tipo].eixo}</text>`;
+      s += `<text x="${X(0) + 8}" y="${Y(tmax) + 4}" font-size="15" font-style="italic" fill="${col("--text")}">τ</text>`;
+    }
+
+    // circles
+    if (visKeys.includes("circ")) {
+      cs.forEach(c => {
+        s += `<path d="M ${X(c.s3)} ${Y(0)} A ${c.r * k} ${c.r * k} 0 0 1 ${X(c.s1)} ${Y(0)}" fill="none" stroke="${col("--primary")}" stroke-width="2" class="env-anim-pt"/>`;
+      });
+    }
+    // points
+    if (visKeys.includes("pts")) {
+      ps.forEach(p => {
+        const x = X(p.s), y = Y(p.t), d = 5;
+        s += `<path d="M ${x - d} ${y - d} L ${x + d} ${y + d} M ${x - d} ${y + d} L ${x + d} ${y - d}" stroke="${col("--primary")}" stroke-width="2.5" class="env-anim-pt"/>`;
+      });
+    }
+    // envelope / tangent
+    if (visKeys.includes("env") || visKeys.includes("tan")) {
+      const len = Math.sqrt((smax * k) ** 2 + (smax * ex.tg * k) ** 2);
+      s += `<line x1="${X(0)}" y1="${Y(ex.c)}" x2="${X(smax)}" y2="${Y(ex.c + smax * ex.tg)}" stroke="${col("--text")}" stroke-width="2.8" class="env-anim-line" style="--env-len:${len};stroke-dasharray:${len}"/>`;
+      if (visKeys.includes("tan") && ex.tg > 0) {
+        cs.forEach(c => {
+          s += `<circle cx="${X(c.tsig)}" cy="${Y(c.ttau)}" r="4" fill="${col("--accent")}" class="env-anim-pt"/>`;
+        });
+      }
+    }
+    // c mark
+    if (visKeys.includes("c")) {
+      s += `<circle cx="${X(0)}" cy="${Y(ex.c)}" r="7" fill="none" stroke="${col("--bad")}" stroke-width="3" class="env-anim-pt"/>`;
+      s += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(0)}" y2="${Y(ex.c)}" stroke="${col("--bad")}" stroke-width="2" stroke-dasharray="5 3"/>`;
+      const cName = ex.tipo === "UU" ? "Cu" : ex.tipo === "CD" ? "c'" : "c";
+      s += `<text x="${X(0) + 10}" y="${Y(ex.c) - 4}" font-size="13" font-weight="700" fill="${col("--bad")}" class="env-anim-label">${cName} = ${fmtg(ex.c, 2)}</text>`;
+    }
+    // phi mark
+    if (visKeys.includes("phi") && ex.tg > 0) {
+      const phi = deg(Math.atan(ex.tg));
+      const arcR = 40;
+      const endX = arcR * Math.cos(Math.atan(ex.tg));
+      const endY = arcR * Math.sin(Math.atan(ex.tg));
+      s += `<line x1="${X(0)}" y1="${Y(ex.c)}" x2="${X(4)}" y2="${Y(ex.c)}" stroke="${col("--water")}" stroke-width="2" stroke-dasharray="4 3"/>`;
+      s += `<path d="M ${X(0) + arcR} ${Y(ex.c)} A ${arcR} ${arcR} 0 0 0 ${X(0) + endX} ${Y(ex.c) - endY}" fill="none" stroke="${col("--water")}" stroke-width="2.5" class="env-anim-pt"/>`;
+      const fName = ex.tipo === "CD" ? "φ'" : "φ";
+      s += `<text x="${X(0) + arcR + 4}" y="${Y(ex.c) - 8}" font-size="13" font-weight="700" fill="${col("--water")}" class="env-anim-label">${fName} = ${fmt(phi, 2)}°</text>`;
+    }
+    // equation label
+    if (visKeys.includes("eq")) {
+      const eqStr = ex.tipo === "UU" ? `τ = Cu = ${fmtg(ex.c, 2)}` : `τ = ${fmtg(ex.c, 2)} + ${fmtg(ex.tg, 4)}·${TIPOS[ex.tipo].eixo}`;
+      s += `<rect x="${X(smax / 2) - 90}" y="${Y(tmax) + 2}" width="180" height="22" rx="6" fill="${col("--primary-soft")}" class="env-anim-label"/>`;
+      s += `<text x="${X(smax / 2)}" y="${Y(tmax) + 17}" font-size="13" font-weight="700" text-anchor="middle" fill="${col("--primary")}" class="env-anim-label">${eqStr}</text>`;
+    }
+
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.innerHTML = s;
+  }
+
+  function initAnima() {
+    $$("[data-anima]").forEach(b => b.onclick = () => {
+      const tipo = b.dataset.anima;
+      animaTipo = tipo;
+      animaPasso = 0;
+      if (animaTimer) clearInterval(animaTimer);
+      animaTimer = null;
+      $("#animaBox").classList.remove("hidden");
+      irAnimaPara(0);
+      $("#animaBox").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    const ant = $("#animaAnt"), prox = $("#animaProx"), auto = $("#animaAuto");
+    if (ant) ant.onclick = () => { pararAnima(); irAnimaPara(animaPasso - 1); };
+    if (prox) prox.onclick = () => { pararAnima(); irAnimaPara(animaPasso + 1); };
+    if (auto) auto.onclick = () => {
+      if (animaTimer) return pararAnima();
+      const { steps } = animaPassos(animaTipo);
+      if (animaPasso >= steps.length - 1) irAnimaPara(0);
+      auto.textContent = "❚❚ Pausar";
+      animaTimer = setInterval(() => {
+        const { steps } = animaPassos(animaTipo);
+        if (animaPasso >= steps.length - 1) return pararAnima();
+        irAnimaPara(animaPasso + 1);
+      }, 3200);
+    };
+  }
+
+  function pararAnima() {
+    if (animaTimer) clearInterval(animaTimer);
+    animaTimer = null;
+    const b = $("#animaAuto");
+    if (b) b.textContent = "▶ Reproduzir";
+  }
+
+  function irAnimaPara(i) {
+    if (!animaTipo) return;
+    const { ex, steps } = animaPassos(animaTipo);
+    animaPasso = Math.max(0, Math.min(steps.length - 1, i));
+    const step = steps[animaPasso];
+    drawAnima($("#animaSvg"), ex, step.keys);
+    $("#animaNum").textContent = `Passo ${animaPasso + 1} de ${steps.length}`;
+    $("#animaTit").textContent = step.title;
+    $("#animaTxt").innerHTML = step.text;
+    const box = $(".mz-step", $("#animaBox"));
+    if (box) { box.classList.remove("mz-in"); void box.offsetWidth; box.classList.add("mz-in"); }
+    $("#animaDots").innerHTML = steps.map((_, j) => `<button type="button" class="${j === animaPasso ? "on" : ""}" data-ap="${j}"></button>`).join("");
+    $$("#animaDots button").forEach(b => b.onclick = () => { pararAnima(); irAnimaPara(+b.dataset.ap); });
+    $("#animaAnt").disabled = animaPasso === 0;
+    $("#animaProx").disabled = animaPasso === steps.length - 1;
+  }
+
   function init() {
     if (!$("#ensTreinoBox")) return;
     cards();
@@ -563,7 +897,11 @@
       try { localStorage.setItem("solos2ee.theme", root.dataset.theme); } catch (e) { /* sem storage */ }
       calc();
       if (atual) desenharAtual(false);
+      if (resumoAtivo !== null) abrirResumo(resumoAtivo);
+      if (animaTipo) irAnimaPara(animaPasso);
     };
+    initResumo();
+    initAnima();
   }
   window.addEventListener("DOMContentLoaded", init);
 })();
